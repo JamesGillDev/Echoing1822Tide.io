@@ -275,122 +275,165 @@
 
   /* NEW: play the attached stars video, ramp playbackRate to 5x, white-flash, return */
   function startCinematic() {
-    if (isCinematic) return;
-    isCinematic = true;
-    const overlay = $('#warpOverlay');
-    const bgVideo = $('#bg-video');
-    const videoBg = $('#videoBg');
-    if (bgVideo) { try { bgVideo.pause(); } catch {} }
-    if (videoBg) videoBg.style.opacity = '0';
-    if (!overlay) { isCinematic = false; return; }
-    overlay.classList.add('active');
+  if (isCinematic) return;
+  isCinematic = true;
+
+  const overlay = $('#warpOverlay');
+  const bgVideo = $('#bg-video');
+  const videoBg = $('#videoBg');
+
+  if (bgVideo) { try { bgVideo.pause(); } catch {} }
+  if (videoBg) videoBg.style.opacity = '0';
+
+  if (!overlay) { isCinematic = false; return; }
+  overlay.classList.add('active');
+  overlay.innerHTML = '';
+
+  const WARP_SRC = 'Screensaver-stars.mp4';
+
+  const warp = document.createElement('video');
+  warp.className = 'warp-player';
+  warp.muted = true;
+  warp.playsInline = true;
+  warp.autoplay = true;
+  warp.preload = 'auto';
+  warp.loop = false;
+  warp.setAttribute('disablePictureInPicture','');
+  warp.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
+
+  const source = document.createElement('source');
+  source.src = WARP_SRC;
+  source.type = 'video/mp4';
+  warp.appendChild(source);
+  overlay.appendChild(warp);
+
+  // Config
+  const SPEED_MAX = 5;
+  const FLASH_MS = 200;
+  const EXPLOSION_LEAD = 1.0;   // Trigger a bit earlier (was 0.55)
+  const INTERVAL_MS = 120;
+  const METADATA_TIMEOUT_MS = 5000;
+
+  let exploded = false;
+  let rateTimer = null;
+  let prevTime = 0;
+  let durationKnown = false;
+  let scheduledFallback = null;
+  let metadataTimeout = null;
+
+  const easeInOutCubic = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+
+  function log(msg){ /* Uncomment for debugging: console.log('[CINEMATIC] ' + msg); */ }
+
+  function triggerExplosion(reason) {
+    if (exploded) return;
+    exploded = true;
+    log('Trigger explosion: ' + reason);
+    try { warp.pause(); } catch {}
+    whiteFlashThenReturn();
+  }
+
+  function whiteFlashThenReturn() {
+    const flash = document.createElement('div');
+    flash.style.cssText =
+      'position:fixed;inset:0;background:#fff;z-index:12000;pointer-events:none;opacity:1';
+    document.body.appendChild(flash);
+
+    // Clean overlay
+    if (rateTimer) clearInterval(rateTimer);
+    if (metadataTimeout) clearTimeout(metadataTimeout);
+    if (scheduledFallback) clearTimeout(scheduledFallback);
+    overlay.classList.remove('active');
     overlay.innerHTML = '';
 
-    // CHANGED: updated filename
-    const WARP_SRC = 'Screensaver-stars.mp4';
+    // Restore background
+    if (videoBg) videoBg.style.opacity = '1';
+    if (bgVideo) { try { bgVideo.play(); } catch {} }
 
-    const warp = document.createElement('video');
-    warp.className = 'warp-player';
-    warp.muted = true;
-    warp.playsInline = true;
-    warp.autoplay = true;
-    warp.preload = 'auto';
-    warp.loop = false;
-    warp.setAttribute('disablePictureInPicture','');
-    warp.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
-    const source = document.createElement('source');
-    source.src = WARP_SRC;
-    source.type = 'video/mp4';
-    warp.appendChild(source);
-    overlay.appendChild(warp);
-
-    let exploded = false;
-    let rampStarted = false;
-    let rateTimer = null;
-    const SPEED_MAX = 5;
-    const FLASH_MS = 180;
-    const EXPLOSION_LEAD = 0.55; // seconds before end to flash
-    const MAX_WAIT_METADATA_MS = 4000;
-
-    const easeInOutCubic = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
-
-    function log(msg, obj){ console.log('[CINEMATIC] ' + msg, obj||''); }
-
-    function cleanup() {
-      if (rateTimer) clearInterval(rateTimer);
-      rateTimer = null;
-      overlay.classList.remove('active');
-      overlay.innerHTML = '';
-    }
-
-    function whiteFlashThenReturn() {
-      const flash = document.createElement('div');
-      flash.style.cssText='position:fixed;inset:0;background:#fff;z-index:12000;pointer-events:none;opacity:1';
-      document.body.appendChild(flash);
-
-      cleanup();
-
-      if (videoBg) videoBg.style.opacity='1';
-      if (bgVideo) { try { bgVideo.play(); } catch {} }
-
-      setTimeout(()=>{
-        flash.style.opacity = '0';
-        setTimeout(()=>{ document.body.removeChild(flash); },800);
-      },50);
-    }
-
-    function rampPlaybackRate(video, targetRate, duration) {
-      const startRate = video.playbackRate;
-      const startTime = performance.now();
-
-      function step(currentTime) {
-        const elapsed = currentTime - startTime;
-        const t = Math.min(elapsed / duration, 1);
-        const easedT = easeInOutCubic(t);
-
-        video.playbackRate = startRate + (targetRate - startRate) * easedT;
-
-        if (t < 1) {
-          requestAnimationFrame(step);
-        } else {
-          setTimeout(()=>{
-            video.playbackRate = targetRate;
-            whiteFlashThenReturn();
-          },50);
-        }
-      }
-
-      requestAnimationFrame(step);
-    }
-
-    function handleVideoLoadedMetadata() {
-      const video = this;
-      video.currentTime = 0.1;
-
-      setTimeout(()=>{
-        video.play();
-        rampPlaybackRate(video, SPEED_MAX, 3000);
-      },50);
-    }
-
-    function handleVideoEnded() {
-      const video = this;
-      video.pause();
-      video.currentTime = 0;
-      video.playbackRate = 1;
-
-      setTimeout(()=>{
-        cleanup();
-        isCinematic = false;
-      },500);
-    }
-
-    const warpVideo = document.querySelector('video.warp-player');
-    if (warpVideo) {
-      warpVideo.addEventListener('loadedmetadata', handleVideoLoadedMetadata);
-      warpVideo.addEventListener('ended', handleVideoEnded);
-    }
+    // Fade flash
+    setTimeout(() => {
+      flash.style.transition = 'opacity .3s ease-out';
+      flash.style.opacity = '0';
+      setTimeout(() => { flash.remove(); isCinematic = false; }, 320);
+    }, FLASH_MS);
   }
+
+  function startRamp() {
+    if (!isFinite(warp.duration) || warp.duration <= 1) {
+      log('Invalid duration; using fallback 37s');
+      Object.defineProperty(warp, 'duration', { value: 37, configurable: true });
+    }
+    const rampEnd = Math.max(0.1, warp.duration - EXPLOSION_LEAD);
+    rateTimer = setInterval(() => {
+      if (exploded) return;
+      const t = Math.min(1, Math.max(0, warp.currentTime / rampEnd));
+      const rate = 1 + (SPEED_MAX - 1) * easeInOutCubic(t);
+      if (warp.playbackRate !== rate) warp.playbackRate = rate;
+
+      // Predict crossing of threshold (handles large jumps at high speed)
+      const remaining = warp.duration - warp.currentTime;
+      if (remaining <= EXPLOSION_LEAD) {
+        triggerExplosion('remaining<=lead');
+        return;
+      }
+      if (prevTime < (warp.duration - EXPLOSION_LEAD) &&
+          warp.currentTime >= (warp.duration - EXPLOSION_LEAD)) {
+        triggerExplosion('crossed threshold');
+        return;
+      }
+      prevTime = warp.currentTime;
+    }, INTERVAL_MS);
+
+    // Safety fallback: force explosion slightly after expected end
+    const safeMs = (warp.duration + 0.5) * 1000;
+    scheduledFallback = setTimeout(() => {
+      triggerExplosion('fallback-timeout-after-duration');
+    }, safeMs);
+  }
+
+  // Autoplay attempt
+  warp.play().catch(() => {
+    log('Autoplay blocked, waiting for user gesture');
+    const resume = () => {
+      warp.play().catch(()=>{});
+      document.removeEventListener('click', resume, true);
+      document.removeEventListener('keydown', resume, true);
+    };
+    document.addEventListener('click', resume, true);
+    document.addEventListener('keydown', resume, true);
+  });
+
+  // Metadata
+  metadataTimeout = setTimeout(() => {
+    if (!durationKnown) {
+      log('Metadata timeout; proceeding without reliable duration');
+      startRamp();
+    }
+  }, METADATA_TIMEOUT_MS);
+
+  warp.addEventListener('loadedmetadata', () => {
+    durationKnown = true;
+    clearTimeout(metadataTimeout);
+    log('Metadata duration=' + warp.duration);
+    startRamp();
+  });
+
+  warp.addEventListener('timeupdate', () => {
+    // Backup start if metadata event missed
+    if (!rateTimer && isFinite(warp.duration) && warp.duration > 1 && !exploded) {
+      log('timeupdate starting ramp (metadata missed)');
+      startRamp();
+    }
+  });
+
+  warp.addEventListener('ended', () => {
+    triggerExplosion('ended-event');
+  });
+
+  warp.addEventListener('error', () => {
+    triggerExplosion('video-error');
+  });
+}
 
   /* NEW: cinematic mode toggle */
   let isCinematicActive = false;
@@ -423,5 +466,6 @@
   function createMouseTrailDot(x, y) {
     const dot = document.createElement('div');
     dot.className = 'cursor-trail-dot';
-    dot.style.width = dot.style.height = Math.random()
+    dot.style.width = dot.style.height = Math.random();
   }
+  
