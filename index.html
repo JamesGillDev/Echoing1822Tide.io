@@ -277,26 +277,20 @@
   function startCinematic() {
     if (isCinematic) return;
     isCinematic = true;
-
-    const overlay = document.getElementById('warpOverlay');
-    const bgVideo = document.getElementById('bg-video');
-    const videoBg = document.getElementById('videoBg');
-
-    if (!overlay) { isCinematic = false; return; }
-
-    // Pause/dim the background video
+    const overlay = $('#warpOverlay');
+    const bgVideo = $('#bg-video');
+    const videoBg = $('#videoBg');
     if (bgVideo) { try { bgVideo.pause(); } catch {} }
     if (videoBg) videoBg.style.opacity = '0';
-
-    // Activate overlay
+    if (!overlay) { isCinematic = false; return; }
     overlay.classList.add('active');
     overlay.innerHTML = '';
 
-    // Use URL-encoded path for spaces/parentheses
-    const WARP_SRC = 'Screensaver%20stars%20(2).mp4';
+    // CHANGED: updated filename
+    const WARP_SRC = 'Screensaver-stars.mp4';
+
     const warp = document.createElement('video');
     warp.className = 'warp-player';
-    warp.src = WARP_SRC;
     warp.muted = true;
     warp.playsInline = true;
     warp.autoplay = true;
@@ -304,235 +298,130 @@
     warp.loop = false;
     warp.setAttribute('disablePictureInPicture','');
     warp.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
+    const source = document.createElement('source');
+    source.src = WARP_SRC;
+    source.type = 'video/mp4';
+    warp.appendChild(source);
     overlay.appendChild(warp);
 
-    let rateTimer = null;
     let exploded = false;
-
-    const SPEED_MAX = 5.0;        // target 5x
-    const FLASH_MS = 180;         // white flash length
-    const EXPLOSION_LEAD = 0.55;  // seconds reserved at end for flash
+    let rampStarted = false;
+    let rateTimer = null;
+    const SPEED_MAX = 5;
+    const FLASH_MS = 180;
+    const EXPLOSION_LEAD = 0.55; // seconds before end to flash
+    const MAX_WAIT_METADATA_MS = 4000;
 
     const easeInOutCubic = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
 
+    function log(msg, obj){ console.log('[CINEMATIC] ' + msg, obj||''); }
+
     function cleanup() {
-      if (rateTimer) { clearInterval(rateTimer); rateTimer = null; }
+      if (rateTimer) clearInterval(rateTimer);
+      rateTimer = null;
       overlay.classList.remove('active');
       overlay.innerHTML = '';
     }
 
     function whiteFlashThenReturn() {
       const flash = document.createElement('div');
-      flash.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:12000;pointer-events:none;opacity:1';
+      flash.style.cssText='position:fixed;inset:0;background:#fff;z-index:12000;pointer-events:none;opacity:1';
       document.body.appendChild(flash);
 
       cleanup();
 
-      if (videoBg) videoBg.style.opacity = '1';
+      if (videoBg) videoBg.style.opacity='1';
       if (bgVideo) { try { bgVideo.play(); } catch {} }
 
-      setTimeout(() => {
-        flash.style.transition = 'opacity .25s ease-out';
+      setTimeout(()=>{
         flash.style.opacity = '0';
-        setTimeout(() => { flash.remove(); isCinematic = false; }, 250);
-      }, FLASH_MS);
+        setTimeout(()=>{ document.body.removeChild(flash); },800);
+      },50);
     }
 
-    warp.addEventListener('loadedmetadata', () => {
-      if (!isFinite(warp.duration) || warp.duration <= 0) {
-        warp.play().finally(() => setTimeout(whiteFlashThenReturn, 2000));
-        return;
-      }
+    function rampPlaybackRate(video, targetRate, duration) {
+      const startRate = video.playbackRate;
+      const startTime = performance.now();
 
-      const rampEnd = Math.max(0.1, warp.duration - EXPLOSION_LEAD);
+      function step(currentTime) {
+        const elapsed = currentTime - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const easedT = easeInOutCubic(t);
 
-      warp.play().catch(() => {
-        const resume = () => { warp.play().catch(()=>{}); document.removeEventListener('click', resume, true); };
-        document.addEventListener('click', resume, true);
-      });
+        video.playbackRate = startRate + (targetRate - startRate) * easedT;
 
-      // Smoothly ramp playbackRate from 1 -> 5 over the ramp window
-      rateTimer = setInterval(() => {
-        const t = Math.min(1, Math.max(0, warp.currentTime / rampEnd));
-        const rate = 1 + (SPEED_MAX - 1) * easeInOutCubic(t);
-        if (warp.playbackRate !== rate) warp.playbackRate = rate;
-
-        // Trigger explosion flash near the very end
-        if (!exploded && warp.duration - warp.currentTime <= EXPLOSION_LEAD) {
-          exploded = true;
-          try { warp.pause(); } catch {}
-          whiteFlashThenReturn();
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          setTimeout(()=>{
+            video.playbackRate = targetRate;
+            whiteFlashThenReturn();
+          },50);
         }
-      }, 100);
-    });
-
-    warp.addEventListener('ended', () => {
-      if (!exploded) {
-        exploded = true;
-        whiteFlashThenReturn();
       }
-    });
 
-    warp.addEventListener('error', () => {
-      whiteFlashThenReturn();
-    });
+      requestAnimationFrame(step);
+    }
+
+    function handleVideoLoadedMetadata() {
+      const video = this;
+      video.currentTime = 0.1;
+
+      setTimeout(()=>{
+        video.play();
+        rampPlaybackRate(video, SPEED_MAX, 3000);
+      },50);
+    }
+
+    function handleVideoEnded() {
+      const video = this;
+      video.pause();
+      video.currentTime = 0;
+      video.playbackRate = 1;
+
+      setTimeout(()=>{
+        cleanup();
+        isCinematic = false;
+      },500);
+    }
+
+    const warpVideo = document.querySelector('video.warp-player');
+    if (warpVideo) {
+      warpVideo.addEventListener('loadedmetadata', handleVideoLoadedMetadata);
+      warpVideo.addEventListener('ended', handleVideoEnded);
+    }
   }
 
-  // Ensure video attempts to play
-  document.addEventListener('DOMContentLoaded', () => {
-    const v = $('#bg-video');
-    if (v) v.play().catch(() => document.body.addEventListener('click', () => v.play(), { once: true }));
-    initPanelToggles();
-    initControls();
-    loadTheme();
+  /* NEW: cinematic mode toggle */
+  let isCinematicActive = false;
+  function toggleCinematic() {
+    if (isCinematicActive) {
+      isCinematicActive = false;
+      $('#warpOverlay').classList.remove('active');
+      $('#bg-video').style.opacity = '1';
+      setTimeout(()=>{ $('#bg-video').play(); },50);
+    } else {
+      isCinematicActive = true;
+      startCinematic();
+    }
+  }
+
+  /* NEW: bind cinematic toggle to keypress (C) */
+  document.addEventListener('keypress', (e)=>{
+    if (e.key === 'c' || e.key === 'C') {
+      e.preventDefault();
+      toggleCinematic();
+    }
   });
 
-  // Panels: expand/collapse on click
-  function initPanelToggles() {
-    $$('.panel').forEach(panel => {
-      const body = panel.querySelector('.body');
-      panel.addEventListener('click', () => togglePanel(panel, body));
-      panel.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          togglePanel(panel, body);
-        }
-      });
-    });
+  /* NEW: improved cursor trail */
+  const cursorCore = $('#cursorCore');
+  let isMouseTrailActive = false;
+  let mouseTrailDots = [];
+  const TRAIL_MAX = 10;
+
+  function createMouseTrailDot(x, y) {
+    const dot = document.createElement('div');
+    dot.className = 'cursor-trail-dot';
+    dot.style.width = dot.style.height = Math.random()
   }
-
-  function togglePanel(panel, body) {
-    const open = panel.getAttribute('aria-expanded') === 'true';
-    panel.setAttribute('aria-expanded', String(!open));
-    if (open) {
-      body.hidden = true;
-    } else {
-      body.hidden = false;
-      panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }
-
-  // Theme toggle with 5 themes
-  const themes = ['neon', 'ocean', 'forest', 'sunset', 'purple'];
-  let currentThemeIndex = 0;
-
-  function loadTheme() {
-    const stored = localStorage.getItem('site-theme') || 'neon';
-    currentThemeIndex = themes.indexOf(stored);
-    if (currentThemeIndex === -1) currentThemeIndex = 0;
-    document.body.setAttribute('data-theme', themes[currentThemeIndex]);
-  }
-
-  function toggleTheme() {
-    currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-    const newTheme = themes[currentThemeIndex];
-    document.body.setAttribute('data-theme', newTheme);
-    localStorage.setItem('site-theme', newTheme);
-
-    const flash = document.createElement('div');
-    flash.style.cssText = 'position:fixed;inset:0;background:var(--accent-cyan);opacity:0.25;z-index:8500;pointer-events:none';
-    document.body.appendChild(flash);
-    flash.animate([{opacity: 0.25}, {opacity: 0}], {duration: 350});
-    setTimeout(() => flash.remove(), 360);
-  }
-
-  // Enhanced mouse trail
-  let mouseTrailEnabled = false;
-  let trailDots = [];
-  const trailCount = 25;
-  let mousePos = {x: 0, y: 0};
-
-  function enableMouseTrail() {
-    if (mouseTrailEnabled) return;
-    mouseTrailEnabled = true;
-    const core = $('#cursorCore');
-    core.style.display = 'block';
-
-    for (let i = 0; i < trailCount; i++) {
-      const d = document.createElement('div');
-      d.className = 'cursor-trail-dot';
-      const size = 12 - (i * 0.4);
-      d.style.width = `${size}px`;
-      d.style.height = `${size}px`;
-      const hue = (i * 15) % 360;
-      d.style.background = `hsl(${hue}, 100%, 60%)`;
-      d.style.boxShadow = `0 0 ${size * 2}px hsl(${hue}, 100%, 60%)`;
-      d.style.left = '0px';
-      d.style.top = '0px';
-      document.body.appendChild(d);
-      trailDots.push({el: d, x: 0, y: 0});
-    }
-
-    document.addEventListener('mousemove', onMouse);
-    animateTrail();
-  }
-
-  function disableMouseTrail() {
-    if (!mouseTrailEnabled) return;
-    mouseTrailEnabled = false;
-    $('#cursorCore').style.display = 'none';
-    trailDots.forEach(d => d.el.remove());
-    trailDots = [];
-    document.removeEventListener('mousemove', onMouse);
-  }
-
-  function onMouse(e) {
-    mousePos.x = e.clientX;
-    mousePos.y = e.clientY;
-  }
-
-  function animateTrail() {
-    if (!mouseTrailEnabled) return;
-
-    const core = $('#cursorCore');
-    core.style.left = mousePos.x + 'px';
-    core.style.top = mousePos.y + 'px';
-
-    trailDots.forEach((dot, idx) => {
-      const target = idx === 0 ? mousePos : trailDots[idx - 1];
-      dot.x += (target.x - dot.x) * 0.3;
-      dot.y += (target.y - dot.y) * 0.3;
-      dot.el.style.left = dot.x + 'px';
-      dot.el.style.top = dot.y + 'px';
-      dot.el.style.opacity = String(1 - (idx * 0.03));
-    });
-
-    requestAnimationFrame(animateTrail);
-  }
-
-  // Controls wiring + keyboard shortcuts
-  function initControls() {
-    $('#themeToggleBtn').addEventListener('click', toggleTheme);
-    $('#mouseTrailToggleBtn').addEventListener('click', () => {
-      if (mouseTrailEnabled) {
-        disableMouseTrail();
-        $('#mouseTrailToggleBtn').textContent = 'Mouse Trail';
-      } else {
-        enableMouseTrail();
-        $('#mouseTrailToggleBtn').textContent = 'Mouse Trail (On)';
-      }
-    });
-
-    // Secret button triggers cinematic
-    $('#hiddenCelebrate').addEventListener('click', startCinematic);
-
-    document.addEventListener('keydown', (e) => {
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
-      if (e.key.toLowerCase() === 't') { toggleTheme(); flashBtn('#themeToggleBtn'); }
-      if (e.key.toLowerCase() === 'm') { $('#mouseTrailToggleBtn').click(); flashBtn('#mouseTrailToggleBtn'); }
-    });
-
-    function flashBtn(sel) {
-      const b = $(sel);
-      if (!b) return;
-      b.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 240 });
-    }
-  }
-
-  // expose helpers for dev console
-  window.Echoing = {
-    toggleTheme, enableMouseTrail, disableMouseTrail, startCinematic
-  };
-  </script>
-</body>
-</html>
