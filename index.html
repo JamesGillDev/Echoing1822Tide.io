@@ -268,27 +268,26 @@
   <div id="cursorCore" class="cursor-core" aria-hidden="true"></div>
 
   <script>
-  // Basic utilities
-  const $ = sel => document.querySelector(sel);
-  const $$ = sel => Array.from(document.querySelectorAll(sel));
-  let isCinematic = false;
+// Ease
+const easeInOutCubic = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+let isCinematic = false;
 
-  /* NEW: play the attached stars video, ramp playbackRate to 5x, white-flash, return */
-  function startCinematic() {
+function startCinematic() {
   if (isCinematic) return;
   isCinematic = true;
 
-  const overlay = $('#warpOverlay');
-  const bgVideo = $('#bg-video');
-  const videoBg = $('#videoBg');
+  const overlay = document.getElementById('warpOverlay');
+  const bgVideo = document.getElementById('bg-video');
+  const videoBg = document.getElementById('videoBg');
+  if (!overlay){ isCinematic=false; return; }
 
   if (bgVideo) { try { bgVideo.pause(); } catch {} }
-  if (videoBg) videoBg.style.opacity = '0';
+  if (videoBg) videoBg.style.opacity='0';
 
-  if (!overlay) { isCinematic = false; return; }
   overlay.classList.add('active');
   overlay.innerHTML = '';
 
+  // Provide a ≥60s file if possible; else this will loop.
   const WARP_SRC = 'Screensaver-stars.mp4';
 
   const warp = document.createElement('video');
@@ -297,175 +296,186 @@
   warp.playsInline = true;
   warp.autoplay = true;
   warp.preload = 'auto';
-  warp.loop = false;
+  warp.loop = false; // we manage looping manually
   warp.setAttribute('disablePictureInPicture','');
   warp.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
-
-  const source = document.createElement('source');
-  source.src = WARP_SRC;
-  source.type = 'video/mp4';
-  warp.appendChild(source);
+  const src = document.createElement('source');
+  src.src = WARP_SRC;
+  src.type = 'video/mp4';
+  warp.appendChild(src);
   overlay.appendChild(warp);
 
   // Config
-  const SPEED_MAX = 5;
-  const FLASH_MS = 200;
-  const EXPLOSION_LEAD = 1.0;   // Trigger a bit earlier (was 0.55)
-  const INTERVAL_MS = 120;
-  const METADATA_TIMEOUT_MS = 5000;
+  const MIN_REAL_TIME_MS = 60000;   // 1 minute minimum experience
+  const TARGET_MAX_RATE  = 10;      // 10x final speed
+  const SUPERNOVA_MS     = 1000;    // supernova overlay duration
+  const FLASH_MS         = 220;     // white flash visible duration
+  const EXPLOSION_LEAD   = 1.0;     // seconds before real end to start supernova if duration allows
 
+  let realStart = performance.now();
   let exploded = false;
-  let rateTimer = null;
-  let prevTime = 0;
-  let durationKnown = false;
-  let scheduledFallback = null;
-  let metadataTimeout = null;
+  let loopCount = 0;
+  let supernovaStarted = false;
+  let rafId = null;
 
-  const easeInOutCubic = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+  // Attempt autoplay
+  warp.play().catch(()=>{
+    const resume = () => { warp.play().catch(()=>{}); document.removeEventListener('click', resume, true); };
+    document.addEventListener('click', resume, true);
+  });
 
-  function log(msg){ /* Uncomment for debugging: console.log('[CINEMATIC] ' + msg); */ }
+  warp.addEventListener('error', ()=> triggerExplosion('video-error'));
+  warp.addEventListener('ended', ()=> {
+    // If we still need more real time, loop manually
+    if (!exploded && (performance.now() - realStart) < MIN_REAL_TIME_MS) {
+      loopCount++;
+      warp.currentTime = 0;
+      warp.play().catch(()=>{});
+    } else if (!exploded) {
+      // If enough real time has passed, begin supernova immediately
+      beginSupernova();
+    }
+  });
 
-  function triggerExplosion(reason) {
+  function animLoop(){
+    if (exploded) return;
+
+    const now = performance.now();
+    const realElapsed = now - realStart;
+    const realProgress = Math.min(1, realElapsed / MIN_REAL_TIME_MS);
+
+    // Ramp playback rate over required real-time window
+    const rate = 1 + (TARGET_MAX_RATE - 1) * easeInOutCubic(realProgress);
+    if (warp.playbackRate !== rate) warp.playbackRate = rate;
+
+    // If video duration known, check for entering last segment
+    if (!supernovaStarted && isFinite(warp.duration) && warp.duration > 2) {
+      // Condition: have met min real time AND inside final lead window of current loop
+      const remaining = warp.duration - warp.currentTime;
+      if (realProgress >= 1 && remaining <= EXPLOSION_LEAD) {
+        beginSupernova();
+      }
+    }
+
+    // If duration not reliable, fallback after min real time
+    if (!supernovaStarted && realProgress >= 1 && !isFinite(warp.duration)) {
+      beginSupernova();
+    }
+
+    rafId = requestAnimationFrame(animLoop);
+  }
+
+  warp.addEventListener('loadedmetadata', ()=>{
+
+    // If the intrinsic duration already ≥ MIN_REAL_TIME_MS we still rely on real-time ramp.
+    // If shorter, we'll loop until we satisfy real-time then run supernova near loop end.
+    animLoop();
+  });
+
+  // If metadata never comes (rare), start animation anyway after a short delay
+  setTimeout(()=>{ if (!warp.readyState) animLoop(); }, 3000);
+
+  function beginSupernova() {
+    if (supernovaStarted) return;
+    supernovaStarted = true;
+
+    // Create supernova canvas overlay
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText='position:absolute;inset:0;z-index:11000';
+    overlay.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    const start = performance.now();
+
+    function resizeCanvas(){
+      canvas.width = overlay.clientWidth;
+      canvas.height = overlay.clientHeight;
+    }
+
+    function draw(){
+      if (exploded) return;
+      const t = (performance.now() - start)/SUPERNOVA_MS;
+      const p = Math.min(1,t);
+
+      ctx.fillStyle='#000';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      const cx = canvas.width/2;
+      const cy = canvas.height/2;
+      const maxR = Math.max(cx,cy)*1.8;
+      const r = maxR * (0.15 + p*1.35);
+
+      // Multi-layer gradient
+      const g = ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+      g.addColorStop(0, `rgba(255,255,255,${0.75 + p*0.25})`);
+      g.addColorStop(0.25, `rgba(255,240,210,${0.7 - p*0.2})`);
+      g.addColorStop(0.55, `rgba(255,180,90,${0.5 - p*0.3})`);
+      g.addColorStop(1, 'rgba(0,0,0,1)');
+      ctx.globalCompositeOperation='source-over';
+      ctx.fillStyle=g;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      // Shock ring
+      ctx.globalCompositeOperation='lighter';
+      ctx.strokeStyle=`rgba(255,220,170,${0.6 - p*0.55})`;
+      ctx.lineWidth = 40 - p*25;
+      ctx.beginPath();
+      ctx.arc(cx,cy,r*0.55,0,Math.PI*2);
+      ctx.stroke();
+
+      // Bloom
+      const bloom = ctx.createRadialGradient(cx,cy,0,cx,cy,r*0.7);
+      bloom.addColorStop(0, `rgba(255,255,255,${p*0.9})`);
+      bloom.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle=bloom;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      // Light rays
+      const rays = 14;
+      for (let i=0;i<rays;i++){
+        const ang = (i/rays)*Math.PI*2 + p*0.4;
+        const len = r*(0.6 + Math.sin(i*3.1)*0.15);
+        ctx.strokeStyle=`rgba(255,240,200,${0.28 - p*0.22})`;
+        ctx.lineWidth=6 - p*4;
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.lineTo(cx+Math.cos(ang)*len, cy+Math.sin(ang)*len);
+        ctx.stroke();
+      }
+
+      if (p < 1) {
+        requestAnimationFrame(draw);
+      } else {
+        triggerExplosion('supernova-complete');
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  function triggerExplosion(reason){
     if (exploded) return;
     exploded = true;
-    log('Trigger explosion: ' + reason);
+    if (rafId) cancelAnimationFrame(rafId);
     try { warp.pause(); } catch {}
-    whiteFlashThenReturn();
-  }
-
-  function whiteFlashThenReturn() {
+    // White flash
     const flash = document.createElement('div');
-    flash.style.cssText =
-      'position:fixed;inset:0;background:#fff;z-index:12000;pointer-events:none;opacity:1';
+    flash.style.cssText='position:fixed;inset:0;background:#fff;z-index:12050;pointer-events:none;opacity:1';
     document.body.appendChild(flash);
 
-    // Clean overlay
-    if (rateTimer) clearInterval(rateTimer);
-    if (metadataTimeout) clearTimeout(metadataTimeout);
-    if (scheduledFallback) clearTimeout(scheduledFallback);
+    // Clean overlay contents except flash
     overlay.classList.remove('active');
-    overlay.innerHTML = '';
+    overlay.innerHTML='';
 
-    // Restore background
-    if (videoBg) videoBg.style.opacity = '1';
+    // Restore background immediately
+    if (videoBg) videoBg.style.opacity='1';
     if (bgVideo) { try { bgVideo.play(); } catch {} }
 
-    // Fade flash
-    setTimeout(() => {
-      flash.style.transition = 'opacity .3s ease-out';
-      flash.style.opacity = '0';
-      setTimeout(() => { flash.remove(); isCinematic = false; }, 320);
-    }, FLASH_MS);
-  }
-
-  function startRamp() {
-    if (!isFinite(warp.duration) || warp.duration <= 1) {
-      log('Invalid duration; using fallback 37s');
-      Object.defineProperty(warp, 'duration', { value: 37, configurable: true });
-    }
-    const rampEnd = Math.max(0.1, warp.duration - EXPLOSION_LEAD);
-    rateTimer = setInterval(() => {
-      if (exploded) return;
-      const t = Math.min(1, Math.max(0, warp.currentTime / rampEnd));
-      const rate = 1 + (SPEED_MAX - 1) * easeInOutCubic(t);
-      if (warp.playbackRate !== rate) warp.playbackRate = rate;
-
-      // Predict crossing of threshold (handles large jumps at high speed)
-      const remaining = warp.duration - warp.currentTime;
-      if (remaining <= EXPLOSION_LEAD) {
-        triggerExplosion('remaining<=lead');
-        return;
+        setTimeout(()=>{
+          flash.style.opacity='0';
+          setTimeout(()=>{ flash.remove(); }, 600);
+        }, FLASH_MS);
+    
+        isCinematic = false;
       }
-      if (prevTime < (warp.duration - EXPLOSION_LEAD) &&
-          warp.currentTime >= (warp.duration - EXPLOSION_LEAD)) {
-        triggerExplosion('crossed threshold');
-        return;
-      }
-      prevTime = warp.currentTime;
-    }, INTERVAL_MS);
-
-    // Safety fallback: force explosion slightly after expected end
-    const safeMs = (warp.duration + 0.5) * 1000;
-    scheduledFallback = setTimeout(() => {
-      triggerExplosion('fallback-timeout-after-duration');
-    }, safeMs);
-  }
-
-  // Autoplay attempt
-  warp.play().catch(() => {
-    log('Autoplay blocked, waiting for user gesture');
-    const resume = () => {
-      warp.play().catch(()=>{});
-      document.removeEventListener('click', resume, true);
-      document.removeEventListener('keydown', resume, true);
-    };
-    document.addEventListener('click', resume, true);
-    document.addEventListener('keydown', resume, true);
-  });
-
-  // Metadata
-  metadataTimeout = setTimeout(() => {
-    if (!durationKnown) {
-      log('Metadata timeout; proceeding without reliable duration');
-      startRamp();
     }
-  }, METADATA_TIMEOUT_MS);
-
-  warp.addEventListener('loadedmetadata', () => {
-    durationKnown = true;
-    clearTimeout(metadataTimeout);
-    log('Metadata duration=' + warp.duration);
-    startRamp();
-  });
-
-  warp.addEventListener('timeupdate', () => {
-    // Backup start if metadata event missed
-    if (!rateTimer && isFinite(warp.duration) && warp.duration > 1 && !exploded) {
-      log('timeupdate starting ramp (metadata missed)');
-      startRamp();
-    }
-  });
-
-  warp.addEventListener('ended', () => {
-    triggerExplosion('ended-event');
-  });
-
-  warp.addEventListener('error', () => {
-    triggerExplosion('video-error');
-  });
-}
-
-  /* NEW: cinematic mode toggle */
-  let isCinematicActive = false;
-  function toggleCinematic() {
-    if (isCinematicActive) {
-      isCinematicActive = false;
-      $('#warpOverlay').classList.remove('active');
-      $('#bg-video').style.opacity = '1';
-      setTimeout(()=>{ $('#bg-video').play(); },50);
-    } else {
-      isCinematicActive = true;
-      startCinematic();
-    }
-  }
-
-  /* NEW: bind cinematic toggle to keypress (C) */
-  document.addEventListener('keypress', (e)=>{
-    if (e.key === 'c' || e.key === 'C') {
-      e.preventDefault();
-      toggleCinematic();
-    }
-  });
-
-  /* NEW: improved cursor trail */
-  const cursorCore = $('#cursorCore');
-  let isMouseTrailActive = false;
-  let mouseTrailDots = [];
-  const TRAIL_MAX = 10;
-
-  function createMouseTrailDot(x, y) {
-    const dot = document.createElement('div');
-    dot.className = 'cursor-trail-dot';
-    dot.style.width = dot.style.height = Math.random();
-  }
-  
