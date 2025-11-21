@@ -161,7 +161,7 @@
     .warp-overlay.active{display:block}
     .star{position:absolute;background:white;border-radius:50%;will-change:transform,width,height,opacity}
 
-    /* cursor trail */
+    /* cursor trail (placeholder for future) */
     .cursor-core{position:fixed;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle, var(--accent-cyan), var(--accent-magenta));pointer-events:none;z-index:9999;mix-blend-mode:screen;transform:translate(-50%,-50%);opacity:.95;transition:transform .06s linear;box-shadow:0 0 20px var(--accent-cyan), 0 0 40px var(--accent-magenta);display:none}
     .cursor-trail-dot{position:fixed;border-radius:50%;pointer-events:none;z-index:9998;mix-blend-mode:screen;transition:transform .08s linear,opacity .2s linear}
 
@@ -174,18 +174,6 @@
       position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
       background:#000;
     }
-
-    /* Cinematic FX layers (kept for future tweaks) */
-    #lensFlareFX{position:fixed;inset:0;pointer-events:none;z-index:11005;background:
-      radial-gradient(circle at 50% 50%,rgba(255,255,255,.25),rgba(255,255,255,0) 60%);
-      mix-blend-mode:screen;opacity:0;transition:opacity .35s linear,transform .35s ease}
-    #starFX{position:fixed;inset:0;pointer-events:none;z-index:11000;opacity:0;transition:opacity .8s ease}
-    #starFX .sx{position:absolute;width:3px;height:3px;background:#fff;border-radius:50%;will-change:transform,opacity}
-    #cinReady{position:fixed;bottom:14px;right:14px;width:10px;height:10px;border-radius:50%;
-      background:radial-gradient(circle,#0ff,#00a0a0);box-shadow:0 0 10px #0ff;
-      opacity:.15;z-index:9999;display:none;pointer-events:none;transition:opacity .6s ease}
-    #cinBlackFade{position:fixed;inset:0;background:#000;z-index:12040;pointer-events:none;
-      opacity:0;transition:opacity 1.1s ease}
   </style>
 </head>
 <body data-theme="neon">
@@ -412,7 +400,6 @@
     const $ = s => document.querySelector(s);
     let isCinematic = false;
 
-    /* === Warp Cinematic Config === */
     const WARP_VIDEOS = [
       'Screensaver-1.mp4',
       'Screensaver-2.mp4',
@@ -420,14 +407,11 @@
       'Screensaver-4.mp4'
     ];
 
-    // Travel-through-space for early warp; Blender for final climax
     const WARP_TRAVEL_AUDIO_SRC = 'Travel-through-space.mp3';
     const WARP_FINAL_AUDIO_SRC  = 'Blender-Hyperspace-Jump.mp3';
 
-    const CROSSFADE_SEC   = 3;
-    const FAST_RATE       = 3;
-    const NORMAL_RATE     = 1.15;
-    const FINAL_MIN_RATE  = 0.6; // reserved if you want slowdown later
+    const VIDEO_FADE_SEC   = 1.0;
+    const AUDIO_CROSSFADE_MS = 1500;
 
     document.addEventListener('DOMContentLoaded', () => {
       const btn = $('#hiddenCelebrate');
@@ -459,35 +443,24 @@
       }
       if (videoBg) videoBg.style.opacity = '0';
 
-      // === Warp audio setup ===
-      const travelAudio = document.createElement('audio');
-      travelAudio.src = WARP_TRAVEL_AUDIO_SRC;
+      // Warp audio
+      const travelAudio = new Audio(WARP_TRAVEL_AUDIO_SRC);
       travelAudio.loop = true;
-      travelAudio.volume = 0.75;
-      travelAudio.preload = 'auto';
+      travelAudio.volume = 0.8;
 
-      const finalAudio = document.createElement('audio');
-      finalAudio.src = WARP_FINAL_AUDIO_SRC;
-      finalAudio.loop = false; // we want exactly one full play
+      const finalAudio = new Audio(WARP_FINAL_AUDIO_SRC);
+      finalAudio.loop = false;
       finalAudio.volume = 0.0;
-      finalAudio.preload = 'auto';
-
-      overlay.appendChild(travelAudio);
-      overlay.appendChild(finalAudio);
 
       safePlayAudio(travelAudio);
       finalAudio.load();
 
-      let currentIndex      = 0;
-      let currentVid        = null;
-      let nextVid           = null;
-      let rateRAF           = null;
-      let finished          = false;
-      let finalAudioStarted = false;
+      let currentIndex = 0;
+      let currentVid   = null;
+      let finalStarted = false;
+      let finished     = false;
 
-      playVideo(0);
-
-      // When Blender-Hyperspace-Jump finishes, fade to black then return
+      // When Blender-Hyperspace-Jump finishes, fade to black, then exit
       finalAudio.addEventListener('ended', () => {
         if (finished) return;
         if (blackout) {
@@ -499,109 +472,191 @@
         }, 1200);
       });
 
-      function playVideo(i) {
+      playVideo(0);
+
+      function playVideo(index) {
         if (finished) return;
-        if (i >= WARP_VIDEOS.length) {
-          // Shouldn't happen normally, but just in case:
+        if (index >= WARP_VIDEOS.length) {
+          // Safety: if we somehow ran out, just fall back
           finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout);
           return;
         }
 
-        currentVid = createVideo(WARP_VIDEOS[i]);
-        overlay.appendChild(currentVid);
+        const vid = createWarpVideo(WARP_VIDEOS[index]);
+        currentVid = vid;
+        overlay.appendChild(vid);
 
-        currentVid.play().catch(() => gesturePlay(currentVid));
-        currentVid.addEventListener('loadeddata', () => {
-          requestAnimationFrame(() => { currentVid.style.opacity = '1'; });
-        });
-        currentVid.addEventListener('error', skipToNext);
+        vid.addEventListener('loadeddata', () => {
+          requestAnimationFrame(() => { vid.style.opacity = '1'; });
 
-        // For videos 0–2, if they naturally end, go to next.
-        if (i < WARP_VIDEOS.length - 1) {
-          currentVid.addEventListener('ended', skipToNext);
-        } else {
-          // For the last video: loop it while Blender audio plays.
-          currentVid.loop = true;
-        }
-
-              if (i + 1 < WARP_VIDEOS.length) {
-                nextVid = createVideo(WARP_VIDEOS[i + 1]);
-                nextVid.style.opacity = '0';
-                overlay.appendChild(nextVid);
-      
-                // Crossfade to next video when current ends
-                currentVid.addEventListener('ended', () => {
-                  crossfadeToNext(currentVid, nextVid, i + 1);
-                });
-              }
+          // Last video: loop and start Blender audio
+          if (index === WARP_VIDEOS.length - 1) {
+            vid.loop = true;
+            if (!finalStarted) {
+              finalStarted = true;
+              crossfadeAudio(travelAudio, finalAudio, AUDIO_CROSSFADE_MS);
             }
-      
-            function crossfadeToNext(current, next, nextIndex) {
-              next.play().catch(() => gesturePlay(next));
-              next.addEventListener('loadeddata', () => {
-                next.style.opacity = '1';
-                setTimeout(() => {
-                  if (current && current.parentNode) current.parentNode.removeChild(current);
-                  playVideo(nextIndex);
-                }, CROSSFADE_SEC * 1000);
-              });
-            }
-      
-            function skipToNext() {
-              if (currentVid && currentVid.parentNode) currentVid.parentNode.removeChild(currentVid);
-              playVideo(currentIndex + 1);
-            }
-      
-            function createVideo(src) {
-              const vid = document.createElement('video');
-              vid.src = src;
-              vid.className = 'warp-player';
-              vid.autoplay = true;
-              vid.muted = true;
-              vid.loop = false;
-              vid.style.opacity = '0';
-              vid.style.transition = 'opacity 1.2s';
-              vid.preload = 'auto';
-              return vid;
-            }
-      
-            function gesturePlay(video) {
-              // Try to play after user gesture
-              video.muted = true;
-              video.play().catch(() => {});
-            }
-      
-            function safePlayAudio(audio) {
-              audio.play().catch(() => {
-                // Try again after user gesture
-                document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
-              });
-            }
-      
-            // Start final audio after last video plays for a bit
-            function startFinalAudio() {
-              if (finalAudioStarted) return;
-              finalAudioStarted = true;
-              travelAudio.volume = 0.0;
-              finalAudio.volume = 0.75;
-              safePlayAudio(finalAudio);
-            }
-      
-            // Optionally, trigger startFinalAudio after a timeout or event
-            setTimeout(startFinalAudio, 8000); // Example: after 8 seconds
           }
-      
-          function finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout) {
-            if (travelAudio) travelAudio.pause();
-            if (finalAudio) finalAudio.pause();
+        });
+
+        vid.play().catch(() => gesturePlayVideo(vid));
+
+        // For first 3 videos, when finished, fade out and go to next
+        if (index < WARP_VIDEOS.length - 1) {
+          vid.addEventListener('ended', () => {
+            fadeOutVideo(vid, () => {
+              if (vid.parentNode) vid.parentNode.removeChild(vid);
+              currentIndex = index + 1;
+              playVideo(currentIndex);
+            });
+          });
+        }
+      }
+
+      function createWarpVideo(src) {
+        const v = document.createElement('video');
+        v.className = 'warp-player';
+        v.src = src;
+        v.autoplay = true;
+        v.muted = true;
+        v.playsInline = true;
+        v.preload = 'auto';
+        v.loop = false;
+        v.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
+        v.setAttribute('disablePictureInPicture', 'true');
+        v.setAttribute('webkit-playsinline', 'true');
+        v.setAttribute('playsinline', 'true');
+        v.removeAttribute('controls');
+        v.style.position = 'absolute';
+        v.style.inset = '0';
+        v.style.width = '100%';
+        v.style.height = '100%';
+        v.style.objectFit = 'cover';
+        v.style.opacity = '0';
+        v.style.transition = `opacity ${VIDEO_FADE_SEC}s linear`;
+        v.style.background = '#000';
+        return v;
+      }
+
+      function fadeOutVideo(videoEl, callback) {
+        videoEl.style.opacity = '0';
+        setTimeout(() => {
+          callback && callback();
+        }, VIDEO_FADE_SEC * 1000);
+      }
+
+      function safePlayAudio(audio) {
+        audio.play().catch(() => {
+          const resume = () => {
+            audio.play().catch(() => {});
+            document.removeEventListener('click', resume, true);
+            document.removeEventListener('keydown', resume, true);
+          };
+          document.addEventListener('click', resume, true);
+          document.addEventListener('keydown', resume, true);
+        });
+      }
+
+      function crossfadeAudio(from, to, durationMs) {
+        const start     = performance.now();
+        const fromVol0  = from.volume;
+        const toVol0    = to.volume;
+        const targetVol = 0.85;
+
+        safePlayAudio(to);
+
+        (function step() {
+          const now = performance.now();
+          const p = Math.min(1, (now - start) / durationMs);
+          from.volume = fromVol0 * (1 - p);
+          to.volume   = toVol0 + (targetVol - toVol0) * p;
+
+          if (p < 1) {
+            requestAnimationFrame(step);
+          } else {
+            try { from.pause(); } catch {}
+          }
+        })();
+      }
+
+      function gesturePlayVideo(video) {
+        // Will usually already be allowed because user clicked the secret button,
+        // but this is a fallback just in case.
+        video.muted = true;
+        video.play().catch(() => {});
+      }
+
+      function finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout) {
+        if (finished) return;
+        finished = true;
+
+        // Fade out whatever audio remains
+        const v1 = travelAudio ? travelAudio.volume : 0;
+        const v2 = finalAudio ? finalAudio.volume : 0;
+        const D  = 800;
+        const t0 = performance.now();
+
+        (function step() {
+          const p = Math.min(1, (performance.now() - t0) / D);
+          if (travelAudio) travelAudio.volume = v1 * (1 - p);
+          if (finalAudio)  finalAudio.volume  = v2 * (1 - p);
+
+          if (p < 1) {
+            requestAnimationFrame(step);
+          } else {
+            try { travelAudio && travelAudio.pause(); } catch {}
+            try { finalAudio && finalAudio.pause(); } catch {}
+
             overlay.classList.remove('active');
             overlay.innerHTML = '';
-            if (videoBg) videoBg.style.opacity = '1';
-            if (bgVideo) bgVideo.play().catch(() => {});
+
             if (blackout) {
               blackout.classList.remove('visible');
-              setTimeout(() => blackout.classList.remove('show'), 800);
+              setTimeout(() => blackout.classList.remove('show'), 500);
             }
+
+            if (videoBg) videoBg.style.opacity = '1';
+            if (bgVideo) {
+              try { bgVideo.play(); } catch {}
+            }
+
+            if (window.mainMusic) {
+              try { window.mainMusic.play(); } catch {}
+            }
+
             isCinematic = false;
           }
-        </script>
+        })();
+      }
+    }
+  </script>
+
+  <!-- === Theme Cycle Script === -->
+  <script>
+    (function themeCycleInit(){
+      const btn = document.getElementById('themeToggleBtn');
+      const classes = ['theme-a','theme-b','theme-c','theme-d','theme-e'];
+      let idx = 0;
+
+      function apply(){
+        document.body.classList.remove(...classes);
+        document.body.classList.add(classes[idx]);
+      }
+      function next(){
+        idx = (idx + 1) % classes.length;
+        apply();
+        document.body.animate([
+          {filter:'brightness(3)'},
+          {filter:'brightness(1.25)'},
+          {filter:'brightness(3)'},
+          {filter:'brightness(1)'}
+        ],{duration:600,easing:'cubic-bezier(0.5,0,0.5,1)',fill:'forwards'});
+      }
+
+      apply();
+      btn.addEventListener('click',next);
+      document.addEventListener('keydown',e=>{ if(e.key==='t') next(); });
+    })();
+  </script>
+</body>
+</html>
