@@ -56,7 +56,7 @@
       --bg-color: #000;
     }
 
-    /* === Enhanced Theme Variants (dramatic changes) === */
+    /* === Enhanced Theme Variants === */
     body.theme-a {
       --accent-cyan:#00ffe0; --accent-magenta:#ff5ae6; --panel-bg:rgba(5,15,40,.65);
       font-family:'Segoe UI',system-ui,sans-serif;
@@ -104,14 +104,41 @@
       flex-direction:column;
     }
 
-    .video-background{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--bg-color);transition:opacity .6s ease}
-    .video-background video{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;transform:translate(-50%,-50%);object-fit:cover;filter:contrast(1.02) saturate(1.05) brightness(0.9);image-rendering:-webkit-optimize-contrast;image-rendering:-webkit-crisp-edges;image-rendering:crisp-edges}
-    .video-background video::-webkit-media-controls{display:none !important}
-    .video-background video::-webkit-media-controls-enclosure{display:none !important}
-    .retro-overlay{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(transparent 60%, rgba(0,0,0,0.12) 100%), radial-gradient(circle at 50% 10%, rgba(255,255,255,0.03), transparent 20%);mix-blend-mode:overlay}
+    .video-background{
+      position:fixed;inset:0;z-index:0;overflow:hidden;
+      background:var(--bg-color);transition:opacity .6s ease;
+    }
+    .video-background video{
+      position:absolute;top:50%;left:50%;
+      min-width:100%;min-height:100%;
+      transform:translate(-50%,-50%);
+      object-fit:cover;
+      filter:contrast(1.02) saturate(1.05) brightness(0.9);
+      image-rendering:-webkit-optimize-contrast;
+      image-rendering:-webkit-crisp-edges;
+      image-rendering:crisp-edges;
+    }
+
+    /* Hide media controls & PiP button everywhere */
+    video::-webkit-media-controls-enclosure,
+    video::-webkit-media-controls,
+    video::-webkit-media-controls-picture-in-picture-button {
+      display:none !important;
+    }
+
+    .retro-overlay{
+      position:fixed;inset:0;z-index:1;pointer-events:none;
+      background-image:
+        linear-gradient(transparent 60%, rgba(0,0,0,0.12) 100%),
+        radial-gradient(circle at 50% 10%, rgba(255,255,255,0.03), transparent 20%);
+      mix-blend-mode:overlay;
+    }
 
     /* Blackout overlay for fade-to-black */
-    #blackout{position:fixed;inset:0;background:#000;z-index:9000;opacity:0;pointer-events:none;transition:opacity .8s ease;display:none}
+    #blackout{
+      position:fixed;inset:0;background:#000;z-index:9000;
+      opacity:0;pointer-events:none;transition:opacity .8s ease;display:none;
+    }
     #blackout.show{display:block}
     #blackout.visible{opacity:1}
 
@@ -127,17 +154,74 @@
     }
 
     /* High-contrast top bar */
-    .topbar{width:min(1100px,100%);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.08);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:14px;padding:1rem 1rem 1.1rem;box-shadow:0 8px 30px rgba(0,0,0,0.35)}
-    h1{font-size:clamp(1.4rem,2.6vw,2.2rem);text-align:center;margin-bottom:.7rem;text-shadow:0 2px 10px rgba(0,0,0,.65)}
-    .controls{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;justify-content:center}
-    .btn{display:inline-flex;align-items:center;gap:.5rem;background:rgba(0,0,0,0.55);color:var(--text-color);border:1px solid rgba(255,255,255,0.16);padding:.6rem 1rem;border-radius:999px;cursor:pointer;transition:transform .18s,box-shadow .18s,background .2s;font-weight:600}
-    .btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.55);background:rgba(0,0,0,0.7)}
-    .linkedin-btn{background:linear-gradient(90deg,#0077b5,#00a0dc);color:#fff;border:none;padding:.6rem 1rem}
-    .panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;width:min(1100px,100%);margin:0 auto}
-    .panel{background:var(--panel-bg);border-radius:12px;padding:1rem;box-shadow:0 8px 30px rgba(16,14,28,0.6);-webkit-backdrop-filter:blur(var(--panel-blur));backdrop-filter:blur(var(--panel-blur));border:1px solid rgba(255,255,255,0.08);transition:transform .22s,box-shadow .22s,background-color 0.4s ease;min-height:90px;position:relative;cursor:pointer}
-    .panel:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(16,14,28,0.8)}
+    .topbar{
+      width:min(1100px,100%);
+      background:rgba(0,0,0,0.55);
+      border:1px solid rgba(255,255,255,0.08);
+      -webkit-backdrop-filter:blur(10px);
+      backdrop-filter:blur(10px);
+      border-radius:14px;
+      padding:1rem 1rem 1.1rem;
+      box-shadow:0 8px 30px rgba(0,0,0,0.35);
+    }
+    h1{
+      font-size:clamp(1.4rem,2.6vw,2.2rem);
+      text-align:center;
+      margin-bottom:.7rem;
+      text-shadow:0 2px 10px rgba(0,0,0,.65);
+    }
+    .controls{
+      display:flex;gap:.6rem;align-items:center;
+      flex-wrap:wrap;justify-content:center;
+    }
+    .btn{
+      display:inline-flex;align-items:center;gap:.5rem;
+      background:rgba(0,0,0,0.55);color:var(--text-color);
+      border:1px solid rgba(255,255,255,0.16);
+      padding:.6rem 1rem;border-radius:999px;
+      cursor:pointer;
+      transition:transform .18s,box-shadow .18s,background .2s;
+      font-weight:600;
+    }
+    .btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 10px 28px rgba(0,0,0,.55);
+      background:rgba(0,0,0,0.7);
+    }
+    .linkedin-btn{
+      background:linear-gradient(90deg,#0077b5,#00a0dc);
+      color:#fff;border:none;padding:.6rem 1rem;
+    }
+    .panels{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:1rem;
+      width:min(1100px,100%);
+      margin:0 auto;
+    }
+    .panel{
+      background:var(--panel-bg);
+      border-radius:12px;
+      padding:1rem;
+      box-shadow:0 8px 30px rgba(16,14,28,0.6);
+      -webkit-backdrop-filter:blur(var(--panel-blur));
+      backdrop-filter:blur(var(--panel-blur));
+      border:1px solid rgba(255,255,255,0.08);
+      transition:transform .22s,box-shadow .22s,background-color 0.4s ease;
+      min-height:90px;
+      position:relative;
+      cursor:pointer;
+    }
+    .panel:hover{
+      transform:translateY(-3px);
+      box-shadow:0 12px 40px rgba(16,14,28,0.8);
+    }
     .panel[aria-expanded="true"]{transform:translateY(-6px)}
-    .panel h3{color:var(--muted);font-size:1rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;pointer-events:none}
+    .panel h3{
+      color:var(--muted);font-size:1rem;margin-bottom:.4rem;
+      display:flex;justify-content:space-between;align-items:center;gap:.5rem;
+      pointer-events:none;
+    }
     .panel .body{color:var(--text-color);line-height:1.45;margin-top:0.5rem}
     .panel .body ul{padding-left:1.1rem}
     .panel .body li{margin:.25rem 0}
@@ -153,26 +237,45 @@
     }
 
     /* Hidden celebrate button */
-    #hiddenCelebrate{position:fixed;bottom:20px;right:20px;width:60px;height:60px;background:transparent;border:none;cursor:pointer;z-index:9999;opacity:0}
+    #hiddenCelebrate{
+      position:fixed;bottom:20px;right:20px;
+      width:60px;height:60px;
+      background:transparent;border:none;
+      cursor:pointer;z-index:9999;opacity:0;
+    }
     #hiddenCelebrate:hover{opacity:0.1}
 
-    /* Warp speed overlay */
-    .warp-overlay{position:fixed;inset:0;z-index:10000;pointer-events:none;display:none;overflow:hidden}
+    /* Warp overlay */
+    .warp-overlay{
+      position:fixed;inset:0;z-index:10000;
+      pointer-events:none;display:none;overflow:hidden;
+    }
     .warp-overlay.active{display:block}
-    .star{position:absolute;background:white;border-radius:50%;will-change:transform,width,height,opacity}
 
-    /* cursor trail (placeholder for future) */
-    .cursor-core{position:fixed;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle, var(--accent-cyan), var(--accent-magenta));pointer-events:none;z-index:9999;mix-blend-mode:screen;transform:translate(-50%,-50%);opacity:.95;transition:transform .06s linear;box-shadow:0 0 20px var(--accent-cyan), 0 0 40px var(--accent-magenta);display:none}
-    .cursor-trail-dot{position:fixed;border-radius:50%;pointer-events:none;z-index:9998;mix-blend-mode:screen;transition:transform .08s linear,opacity .2s linear}
+    .warp-overlay video.warp-player{
+      position:absolute;inset:0;width:100%;height:100%;
+      object-fit:cover;background:#000;
+    }
+
+    /* Mouse trail */
+    .cursor-core{
+      position:fixed;width:16px;height:16px;border-radius:50%;
+      background:radial-gradient(circle, var(--accent-cyan), var(--accent-magenta));
+      pointer-events:none;z-index:9999;mix-blend-mode:screen;
+      transform:translate(-50%,-50%);
+      opacity:.95;transition:transform .06s linear;
+      box-shadow:0 0 20px var(--accent-cyan), 0 0 40px var(--accent-magenta);
+      display:none;
+    }
+    .cursor-trail-dot{
+      position:fixed;border-radius:50%;pointer-events:none;
+      z-index:9998;mix-blend-mode:screen;
+      transition:transform .12s linear,opacity .3s linear;
+    }
 
     @media(max-width:520px){
       main.container{padding:2rem 1rem}
       .topbar{padding:.9rem}
-    }
-
-    .warp-overlay video.warp-player{
-      position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-      background:#000;
     }
   </style>
 </head>
@@ -182,7 +285,7 @@
 
   <!-- Video + overlay -->
   <div class="video-background" aria-hidden="true" id="videoBg">
-    <video autoplay muted loop id="bg-video" preload="auto" disablePictureInPicture poster="">
+    <video autoplay muted loop id="bg-video" preload="auto" disablePictureInPicture>
       <source src="background-final.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
@@ -334,24 +437,31 @@
   <!-- cursor elements -->
   <div id="cursorCore" class="cursor-core" aria-hidden="true"></div>
 
-  <!-- === Main Background Music Script (BTTF) === -->
+  <!-- === Main Background Music Script (BTTF autoplay) === -->
   <script>
     const mainMusic = document.getElementById('main-music');
 
-    function startMainMusicOnce() {
+    document.addEventListener('DOMContentLoaded', () => {
       if (!mainMusic) return;
       mainMusic.volume = 0.45;
-      mainMusic.play().catch(() => {});
 
-      document.removeEventListener('click', startMainMusicOnce);
-      document.removeEventListener('keydown', startMainMusicOnce);
-    }
+      const playPromise = mainMusic.play();
+      if (playPromise && typeof playPromise.then === 'function') {
+        playPromise.catch(() => {
+          // Browser blocked autoplay; fall back to first user interaction
+          const resume = () => {
+            mainMusic.play().catch(() => {});
+            document.removeEventListener('click', resume);
+            document.removeEventListener('keydown', resume);
+          };
+          document.addEventListener('click', resume);
+          document.addEventListener('keydown', resume);
+        });
+      }
 
-    document.addEventListener('click', startMainMusicOnce, { once: true });
-    document.addEventListener('keydown', startMainMusicOnce, { once: true });
-
-    // Expose for cinematic script
-    window.mainMusic = mainMusic;
+      // Expose for cinematic script
+      window.mainMusic = mainMusic;
+    });
   </script>
 
   <!-- === Panel Toggle Script (Buttons 1–5) === -->
@@ -395,268 +505,26 @@
     });
   </script>
 
-  <!-- === Warp Cinematic Script (Screensavers + Space Audio) === -->
+  <!-- === Mouse Trail + Theme Cycle Scripts === -->
   <script>
-    const $ = s => document.querySelector(s);
-    let isCinematic = false;
-
-    const WARP_VIDEOS = [
-      'Screensaver-1.mp4',
-      'Screensaver-2.mp4',
-      'Screensaver-3.mp4',
-      'Screensaver-4.mp4'
-    ];
-
-    const WARP_TRAVEL_AUDIO_SRC = 'Travel-through-space.mp3';
-    const WARP_FINAL_AUDIO_SRC  = 'Blender-Hyperspace-Jump.mp3';
-
-    const VIDEO_FADE_SEC   = 1.0;
-    const AUDIO_CROSSFADE_MS = 1500;
-
     document.addEventListener('DOMContentLoaded', () => {
-      const btn = $('#hiddenCelebrate');
-      if (btn) btn.addEventListener('click', startCinematic);
-    });
+      /* Theme cycle */
+      const themeBtn = document.getElementById('themeToggleBtn');
+      const themeClasses = ['theme-a','theme-b','theme-c','theme-d','theme-e'];
+      let themeIdx = 0;
 
-    function startCinematic() {
-      if (isCinematic) return;
-      isCinematic = true;
-
-      const overlay  = $('#warpOverlay');
-      const bgVideo  = $('#bg-video');
-      const videoBg  = $('#videoBg');
-      const blackout = $('#blackout');
-
-      if (!overlay) return;
-
-      overlay.classList.add('active');
-      overlay.style.background = '#000';
-      overlay.innerHTML = '';
-
-      // Pause main music while warp runs
-      if (window.mainMusic && !window.mainMusic.paused) {
-        try { window.mainMusic.pause(); } catch {}
+      function applyTheme(){
+        document.body.classList.remove(...themeClasses);
+        document.body.classList.add(themeClasses[themeIdx]);
       }
-
-      if (bgVideo) {
-        try { bgVideo.pause(); } catch {}
-      }
-      if (videoBg) videoBg.style.opacity = '0';
-
-      // Warp audio
-      const travelAudio = new Audio(WARP_TRAVEL_AUDIO_SRC);
-      travelAudio.loop = true;
-      travelAudio.volume = 0.8;
-
-      const finalAudio = new Audio(WARP_FINAL_AUDIO_SRC);
-      finalAudio.loop = false;
-      finalAudio.volume = 0.0;
-
-      safePlayAudio(travelAudio);
-      finalAudio.load();
-
-      let currentIndex = 0;
-      let currentVid   = null;
-      let finalStarted = false;
-      let finished     = false;
-
-      // When Blender-Hyperspace-Jump finishes, fade to black, then exit
-      finalAudio.addEventListener('ended', () => {
-        if (finished) return;
-        if (blackout) {
-          blackout.classList.add('show');
-          requestAnimationFrame(() => blackout.classList.add('visible'));
-        }
-        setTimeout(() => {
-          finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout);
-        }, 1200);
-      });
-
-      playVideo(0);
-
-      function playVideo(index) {
-        if (finished) return;
-        if (index >= WARP_VIDEOS.length) {
-          // Safety: if we somehow ran out, just fall back
-          finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout);
-          return;
-        }
-
-        const vid = createWarpVideo(WARP_VIDEOS[index]);
-        currentVid = vid;
-        overlay.appendChild(vid);
-
-        vid.addEventListener('loadeddata', () => {
-          requestAnimationFrame(() => { vid.style.opacity = '1'; });
-
-          // Last video: loop and start Blender audio
-          if (index === WARP_VIDEOS.length - 1) {
-            vid.loop = true;
-            if (!finalStarted) {
-              finalStarted = true;
-              crossfadeAudio(travelAudio, finalAudio, AUDIO_CROSSFADE_MS);
-            }
-          }
-        });
-
-        vid.play().catch(() => gesturePlayVideo(vid));
-
-        // For first 3 videos, when finished, fade out and go to next
-        if (index < WARP_VIDEOS.length - 1) {
-          vid.addEventListener('ended', () => {
-            fadeOutVideo(vid, () => {
-              if (vid.parentNode) vid.parentNode.removeChild(vid);
-              currentIndex = index + 1;
-              playVideo(currentIndex);
-            });
-          });
-        }
-      }
-
-      function createWarpVideo(src) {
-        const v = document.createElement('video');
-        v.className = 'warp-player';
-        v.src = src;
-        v.autoplay = true;
-        v.muted = true;
-        v.playsInline = true;
-        v.preload = 'auto';
-        v.loop = false;
-        v.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
-        v.setAttribute('disablePictureInPicture', 'true');
-        v.setAttribute('webkit-playsinline', 'true');
-        v.setAttribute('playsinline', 'true');
-        v.removeAttribute('controls');
-        v.style.position = 'absolute';
-        v.style.inset = '0';
-        v.style.width = '100%';
-        v.style.height = '100%';
-        v.style.objectFit = 'cover';
-        v.style.opacity = '0';
-        v.style.transition = `opacity ${VIDEO_FADE_SEC}s linear`;
-        v.style.background = '#000';
-        return v;
-      }
-
-      function fadeOutVideo(videoEl, callback) {
-        videoEl.style.opacity = '0';
-        setTimeout(() => {
-          callback && callback();
-        }, VIDEO_FADE_SEC * 1000);
-      }
-
-      function safePlayAudio(audio) {
-        audio.play().catch(() => {
-          const resume = () => {
-            audio.play().catch(() => {});
-            document.removeEventListener('click', resume, true);
-            document.removeEventListener('keydown', resume, true);
-          };
-          document.addEventListener('click', resume, true);
-          document.addEventListener('keydown', resume, true);
-        });
-      }
-
-      function crossfadeAudio(from, to, durationMs) {
-        const start     = performance.now();
-        const fromVol0  = from.volume;
-        const toVol0    = to.volume;
-        const targetVol = 0.85;
-
-        safePlayAudio(to);
-
-        (function step() {
-          const now = performance.now();
-          const p = Math.min(1, (now - start) / durationMs);
-          from.volume = fromVol0 * (1 - p);
-          to.volume   = toVol0 + (targetVol - toVol0) * p;
-
-          if (p < 1) {
-            requestAnimationFrame(step);
-          } else {
-            try { from.pause(); } catch {}
-          }
-        })();
-      }
-
-      function gesturePlayVideo(video) {
-        // Will usually already be allowed because user clicked the secret button,
-        // but this is a fallback just in case.
-        video.muted = true;
-        video.play().catch(() => {});
-      }
-
-      function finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout) {
-        if (finished) return;
-        finished = true;
-
-        // Fade out whatever audio remains
-        const v1 = travelAudio ? travelAudio.volume : 0;
-        const v2 = finalAudio ? finalAudio.volume : 0;
-        const D  = 800;
-        const t0 = performance.now();
-
-        (function step() {
-          const p = Math.min(1, (performance.now() - t0) / D);
-          if (travelAudio) travelAudio.volume = v1 * (1 - p);
-          if (finalAudio)  finalAudio.volume  = v2 * (1 - p);
-
-          if (p < 1) {
-            requestAnimationFrame(step);
-          } else {
-            try { travelAudio && travelAudio.pause(); } catch {}
-            try { finalAudio && finalAudio.pause(); } catch {}
-
-            overlay.classList.remove('active');
-            overlay.innerHTML = '';
-
-            if (blackout) {
-              blackout.classList.remove('visible');
-              setTimeout(() => blackout.classList.remove('show'), 500);
-            }
-
-            if (videoBg) videoBg.style.opacity = '1';
-            if (bgVideo) {
-              try { bgVideo.play(); } catch {}
-            }
-
-            if (window.mainMusic) {
-              try { window.mainMusic.play(); } catch {}
-            }
-
-            isCinematic = false;
-          }
-        })();
-      }
-    }
-  </script>
-
-  <!-- === Theme Cycle Script === -->
-  <script>
-    (function themeCycleInit(){
-      const btn = document.getElementById('themeToggleBtn');
-      const classes = ['theme-a','theme-b','theme-c','theme-d','theme-e'];
-      let idx = 0;
-
-      function apply(){
-        document.body.classList.remove(...classes);
-        document.body.classList.add(classes[idx]);
-      }
-      function next(){
-        idx = (idx + 1) % classes.length;
-        apply();
-        document.body.animate([
-          {filter:'brightness(3)'},
-          {filter:'brightness(1.25)'},
-          {filter:'brightness(3)'},
-          {filter:'brightness(1)'}
-        ],{duration:600,easing:'cubic-bezier(0.5,0,0.5,1)',fill:'forwards'});
-      }
-
-      apply();
-      btn.addEventListener('click',next);
-      document.addEventListener('keydown',e=>{ if(e.key==='t') next(); });
-    })();
-  </script>
-</body>
-</html>
+      function nextTheme(){
+        themeIdx = (themeIdx + 1) % themeClasses.length;
+        applyTheme();
+        document.body.animate(
+          [
+            {filter:'brightness(3)'},
+            {filter:'brightness(1.25)'},
+            {filter:'brightness(3)'},
+            {filter:'brightness(1)'}
+          ],
+          {duration:600,easing:'cubic-bezier(0.5,0,0.5,1)',fill:
