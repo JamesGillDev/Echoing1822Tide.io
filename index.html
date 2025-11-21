@@ -91,7 +91,19 @@
     .panel-event-particle{position:absolute;background:radial-gradient(circle,#fff,var(--accent-cyan));width:6px;height:6px;border-radius:50%;will-change:transform,opacity;mix-blend-mode:screen}
 
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg-color);color:var(--text-color);transition:background-color 0.6s ease}
+    html,body{
+      height:100%;
+      font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+      background:var(--bg-color);
+      color:var(--text-color);
+      transition:background-color 0.6s ease;
+    }
+
+    body{
+      display:flex;
+      flex-direction:column;
+    }
+
     .video-background{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--bg-color);transition:opacity .6s ease}
     .video-background video{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;transform:translate(-50%,-50%);object-fit:cover;filter:contrast(1.02) saturate(1.05) brightness(0.9);image-rendering:-webkit-optimize-contrast;image-rendering:-webkit-crisp-edges;image-rendering:crisp-edges}
     .video-background video::-webkit-media-controls{display:none !important}
@@ -103,7 +115,16 @@
     #blackout.show{display:block}
     #blackout.visible{opacity:1}
 
-    .container{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;gap:1rem;align-items:center;padding:3.5rem 1rem}
+    main.container{
+      position:relative;
+      z-index:2;
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:1rem;
+      align-items:center;
+      padding:3.5rem 1rem;
+    }
 
     /* High-contrast top bar */
     .topbar{width:min(1100px,100%);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.08);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:14px;padding:1rem 1rem 1.1rem;box-shadow:0 8px 30px rgba(0,0,0,0.35)}
@@ -123,9 +144,9 @@
     .panel .body h4{margin:.6rem 0 .25rem;color:var(--accent-cyan);font-size:1rem}
 
     footer{
-      margin-top:auto;
-      padding-top:1.25rem;
-      padding-bottom:1rem;
+      position:relative;
+      z-index:2;
+      padding:0.75rem 1rem 1rem;
       color:rgba(151,160,255,0.85);
       font-size:.9rem;
       text-align:center;
@@ -145,16 +166,16 @@
     .cursor-trail-dot{position:fixed;border-radius:50%;pointer-events:none;z-index:9998;mix-blend-mode:screen;transition:transform .08s linear,opacity .2s linear}
 
     @media(max-width:520px){
-      .container{padding:2rem 1rem}
+      main.container{padding:2rem 1rem}
       .topbar{padding:.9rem}
     }
 
     .warp-overlay video.warp-player{
       position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-      background:#000; /* ensures no see-through edges */
+      background:#000;
     }
 
-    /* Cinematic FX layers */
+    /* Cinematic FX layers (kept for future tweaks) */
     #lensFlareFX{position:fixed;inset:0;pointer-events:none;z-index:11005;background:
       radial-gradient(circle at 50% 50%,rgba(255,255,255,.25),rgba(255,255,255,0) 60%);
       mix-blend-mode:screen;opacity:0;transition:opacity .35s linear,transform .35s ease}
@@ -163,7 +184,6 @@
     #cinReady{position:fixed;bottom:14px;right:14px;width:10px;height:10px;border-radius:50%;
       background:radial-gradient(circle,#0ff,#00a0a0);box-shadow:0 0 10px #0ff;
       opacity:.15;z-index:9999;display:none;pointer-events:none;transition:opacity .6s ease}
-    /* Fade to black overlay (last video) */
     #cinBlackFade{position:fixed;inset:0;background:#000;z-index:12040;pointer-events:none;
       opacity:0;transition:opacity 1.1s ease}
   </style>
@@ -187,7 +207,7 @@
     <div class="topbar">
       <h1>Career Lifeline – James Gill</h1>
       <div class="controls" role="toolbar" aria-label="Page controls">
-        <a class="btn linkedin-btn" href="https://linkedin.com/in/james-gill-echoing1822tide" target="_blank" rel="noopener noreferrer">Connect on LinkedIn</a>
+        <a class="btn linkedin-btn" href="https://www.linkedin.com/in/james-e-gill" target="_blank" rel="noopener noreferrer">Connect on LinkedIn</a>
         <button id="themeToggleBtn" class="btn" title="Theme change (T)">Theme change</button>
         <button id="mouseTrailToggleBtn" class="btn" title="Toggle mouse trail (M)">Mouse Trail</button>
       </div>
@@ -316,9 +336,9 @@
         </div>
       </article>
     </section>
-
-    <footer>© 2025 EchoingTide1822 - James Gill</footer>
   </main>
+
+  <footer>© 2025 EchoingTide1822 - James Gill</footer>
 
   <!-- Hidden celebrate button -->
   <button id="hiddenCelebrate" aria-label="Secret celebration"></button>
@@ -346,6 +366,47 @@
     window.mainMusic = mainMusic;
   </script>
 
+  <!-- === Panel Toggle Script (Buttons 1–5) === -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const panels = Array.from(document.querySelectorAll('.panel'));
+
+      function closeAll() {
+        panels.forEach(p => {
+          const body = p.querySelector('.body');
+          p.setAttribute('aria-expanded', 'false');
+          if (body) body.hidden = true;
+        });
+      }
+
+      function togglePanel(panel) {
+        const isExpanded = panel.getAttribute('aria-expanded') === 'true';
+        const body = panel.querySelector('.body');
+        closeAll();
+        if (!isExpanded && body) {
+          panel.setAttribute('aria-expanded', 'true');
+          body.hidden = false;
+        }
+      }
+
+      panels.forEach(panel => {
+        const body = panel.querySelector('.body');
+        if (body) body.hidden = true;
+
+        panel.addEventListener('click', () => {
+          togglePanel(panel);
+        });
+
+        panel.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            togglePanel(panel);
+          }
+        });
+      });
+    });
+  </script>
+
   <!-- === Warp Cinematic Script (Screensavers + Space Audio) === -->
   <script>
     const $ = s => document.querySelector(s);
@@ -359,14 +420,14 @@
       'Screensaver-4.mp4'
     ];
 
-    // Travel-through-space for 1–3, Blender-Hyperspace-Jump for 4
+    // Travel-through-space for early warp; Blender for final climax
     const WARP_TRAVEL_AUDIO_SRC = 'Travel-through-space.mp3';
     const WARP_FINAL_AUDIO_SRC  = 'Blender-Hyperspace-Jump.mp3';
 
     const CROSSFADE_SEC   = 3;
     const FAST_RATE       = 3;
     const NORMAL_RATE     = 1.15;
-    const FINAL_MIN_RATE  = 0.6;
+    const FINAL_MIN_RATE  = 0.6; // reserved if you want slowdown later
 
     document.addEventListener('DOMContentLoaded', () => {
       const btn = $('#hiddenCelebrate');
@@ -377,9 +438,9 @@
       if (isCinematic) return;
       isCinematic = true;
 
-      const overlay = $('#warpOverlay');
-      const bgVideo = $('#bg-video');
-      const videoBg = $('#videoBg');
+      const overlay  = $('#warpOverlay');
+      const bgVideo  = $('#bg-video');
+      const videoBg  = $('#videoBg');
       const blackout = $('#blackout');
 
       if (!overlay) return;
@@ -407,7 +468,7 @@
 
       const finalAudio = document.createElement('audio');
       finalAudio.src = WARP_FINAL_AUDIO_SRC;
-      finalAudio.loop = true;
+      finalAudio.loop = false; // we want exactly one full play
       finalAudio.volume = 0.0;
       finalAudio.preload = 'auto';
 
@@ -417,18 +478,31 @@
       safePlayAudio(travelAudio);
       finalAudio.load();
 
-      let currentIndex   = 0;
-      let currentVid     = null;
-      let nextVid        = null;
-      let rateRAF        = null;
-      let finished       = false;
-      let blackFadeDone  = false;
+      let currentIndex      = 0;
+      let currentVid        = null;
+      let nextVid           = null;
+      let rateRAF           = null;
+      let finished          = false;
+      let finalAudioStarted = false;
 
       playVideo(0);
+
+      // When Blender-Hyperspace-Jump finishes, fade to black then return
+      finalAudio.addEventListener('ended', () => {
+        if (finished) return;
+        if (blackout) {
+          blackout.classList.add('show');
+          requestAnimationFrame(() => blackout.classList.add('visible'));
+        }
+        setTimeout(() => {
+          finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout);
+        }, 1200);
+      });
 
       function playVideo(i) {
         if (finished) return;
         if (i >= WARP_VIDEOS.length) {
+          // Shouldn't happen normally, but just in case:
           finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout);
           return;
         }
@@ -441,255 +515,93 @@
           requestAnimationFrame(() => { currentVid.style.opacity = '1'; });
         });
         currentVid.addEventListener('error', skipToNext);
-        currentVid.addEventListener('ended', skipToNext);
 
-        if (i + 1 < WARP_VIDEOS.length) {
-          nextVid = createVideo(WARP_VIDEOS[i + 1]);
-          overlay.appendChild(nextVid);
+        // For videos 0–2, if they naturally end, go to next.
+        if (i < WARP_VIDEOS.length - 1) {
+          currentVid.addEventListener('ended', skipToNext);
         } else {
-          nextVid = null;
+          // For the last video: loop it while Blender audio plays.
+          currentVid.loop = true;
         }
 
-        currentVid.addEventListener('loadedmetadata', () => {
-          setupPlaybackRate(i, currentVid);
-
-          if (nextVid && isFinite(currentVid.duration)) {
-            const crossAt = Math.max(0, currentVid.duration - CROSSFADE_SEC);
-            scheduleCrossfade(crossAt);
-          }
-
-          // When entering last video, crossfade to final audio
-          if (i === WARP_VIDEOS.length - 1) {
-            crossfadeAudio(travelAudio, finalAudio, 1500);
-          }
-        });
-      }
-
-      function createVideo(src) {
-        const v = document.createElement('video');
-        v.className = 'warp-player';
-        v.muted = true;
-        v.playsInline = true;
-        v.autoplay = true;
-        v.preload = 'auto';
-        v.loop = false;
-        v.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
-        v.setAttribute('disablePictureInPicture', 'true');
-        v.setAttribute('webkit-playsinline', 'true');
-        v.setAttribute('playsinline', 'true');
-        v.removeAttribute('controls');
-        v.style.cssText = `
-          position:absolute;inset:0;width:100%;height:100%;
-          object-fit:cover;opacity:0;
-          transition:opacity ${CROSSFADE_SEC}s linear;
-          background:#000;
-        `;
-        const s = document.createElement('source');
-        s.src = src;
-        s.type = 'video/mp4';
-        v.appendChild(s);
-        return v;
-      }
-
-      function scheduleCrossfade(atTime) {
-        if (!currentVid || !nextVid || !isFinite(currentVid.duration)) return;
-
-        function watch() {
-          if (!currentVid || finished) return;
-          if (currentVid.currentTime >= atTime) {
-            currentVid.removeEventListener('timeupdate', watch);
-            nextVid.play().catch(() => gesturePlay(nextVid));
-            requestAnimationFrame(() => {
-              nextVid.style.opacity = '1';
-              currentVid.style.opacity = '0';
-            });
-            setTimeout(() => {
-              if (currentVid) currentVid.remove();
-              currentIndex++;
-              currentVid = nextVid;
-              nextVid = null;
-              playVideo(currentIndex);
-            }, CROSSFADE_SEC * 1000 + 50);
-          }
-        }
-
-        currentVid.addEventListener('timeupdate', watch);
-      }
-
-      function skipToNext() {
-        currentIndex++;
-        if (currentVid) currentVid.remove();
-        if (nextVid) {
-          currentVid = nextVid;
-          nextVid = null;
-          currentVid.style.opacity = '1';
-          currentVid.play().catch(() => gesturePlay(currentVid));
-          playVideo(currentIndex);
-        } else {
-          finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout);
-        }
-      }
-
-      function setupPlaybackRate(index, vid) {
-        cancelRateLoop();
-        const dur = vid.duration || 0;
-
-        function loop() {
-          if (!vid || finished) return;
-          const t = vid.currentTime;
-          let rate = 1;
-
-          if (index === 0) {
-            // First video: ramp up into warp
-            const accelStart = dur * 0.3;
-            const accelEnd   = Math.max(accelStart + 0.1, dur - CROSSFADE_SEC);
-            if (t <= accelStart) {
-              rate = 1;
-            } else if (t >= accelEnd) {
-              rate = FAST_RATE;
-            } else {
-              const p = (t - accelStart) / (accelEnd - accelStart);
-              rate = 1 + (FAST_RATE - 1) * easeInOutCubic(p);
+              if (i + 1 < WARP_VIDEOS.length) {
+                nextVid = createVideo(WARP_VIDEOS[i + 1]);
+                nextVid.style.opacity = '0';
+                overlay.appendChild(nextVid);
+      
+                // Crossfade to next video when current ends
+                currentVid.addEventListener('ended', () => {
+                  crossfadeToNext(currentVid, nextVid, i + 1);
+                });
+              }
             }
-          } else if (index > 0 && index < WARP_VIDEOS.length - 1) {
-            // Middle videos: stable warp rate
-            rate = NORMAL_RATE;
-          } else {
-            // Last video: normal speed, just fade to black near the end
-            rate = 1;
-            if (isFinite(dur) && dur > 0 && !blackFadeDone && dur - t <= 1.0 && blackout) {
-              blackFadeDone = true;
-              blackout.classList.add('show');
-              requestAnimationFrame(() => blackout.classList.add('visible'));
+      
+            function crossfadeToNext(current, next, nextIndex) {
+              next.play().catch(() => gesturePlay(next));
+              next.addEventListener('loadeddata', () => {
+                next.style.opacity = '1';
+                setTimeout(() => {
+                  if (current && current.parentNode) current.parentNode.removeChild(current);
+                  playVideo(nextIndex);
+                }, CROSSFADE_SEC * 1000);
+              });
             }
+      
+            function skipToNext() {
+              if (currentVid && currentVid.parentNode) currentVid.parentNode.removeChild(currentVid);
+              playVideo(currentIndex + 1);
+            }
+      
+            function createVideo(src) {
+              const vid = document.createElement('video');
+              vid.src = src;
+              vid.className = 'warp-player';
+              vid.autoplay = true;
+              vid.muted = true;
+              vid.loop = false;
+              vid.style.opacity = '0';
+              vid.style.transition = 'opacity 1.2s';
+              vid.preload = 'auto';
+              return vid;
+            }
+      
+            function gesturePlay(video) {
+              // Try to play after user gesture
+              video.muted = true;
+              video.play().catch(() => {});
+            }
+      
+            function safePlayAudio(audio) {
+              audio.play().catch(() => {
+                // Try again after user gesture
+                document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
+              });
+            }
+      
+            // Start final audio after last video plays for a bit
+            function startFinalAudio() {
+              if (finalAudioStarted) return;
+              finalAudioStarted = true;
+              travelAudio.volume = 0.0;
+              finalAudio.volume = 0.75;
+              safePlayAudio(finalAudio);
+            }
+      
+            // Optionally, trigger startFinalAudio after a timeout or event
+            setTimeout(startFinalAudio, 8000); // Example: after 8 seconds
           }
-
-          vid.playbackRate = rate;
-          rateRAF = requestAnimationFrame(loop);
-        }
-
-        loop();
-      }
-
-      function easeInOutCubic(x) {
-        return x < 0.5
-          ? 4 * x * x * x
-          : 1 - Math.pow(-2 * x + 2, 3) / 2;
-      }
-
-      function cancelRateLoop() {
-        if (rateRAF) cancelAnimationFrame(rateRAF);
-        rateRAF = null;
-      }
-
-      function safePlayAudio(a) {
-        if (!a) return;
-        a.play().catch(() => {
-          const resume = () => {
-            a.play().catch(() => {});
-            document.removeEventListener('click', resume, true);
-            document.removeEventListener('keydown', resume, true);
-          };
-          document.addEventListener('click', resume, true);
-          document.addEventListener('keydown', resume, true);
-        });
-      }
-
-      function crossfadeAudio(from, to, durationMs) {
-        const start     = performance.now();
-        const fromStart = from.volume;
-        const toStart   = to.volume;
-        safePlayAudio(to);
-
-        (function step() {
-          const p = Math.min(1, (performance.now() - start) / durationMs);
-          from.volume = fromStart * (1 - p);
-          to.volume   = toStart + (0.8 - toStart) * p;
-          if (p < 1) requestAnimationFrame(step);
-        })();
-      }
-
-      function gesturePlay(v) {
-        const resume = () => {
-          v.play().catch(() => {});
-          document.removeEventListener('click', resume, true);
-        };
-        document.addEventListener('click', resume, true);
-      }
-
-      function finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout) {
-        if (finished) return;
-        finished = true;
-        cancelRateLoop();
-
-        const v1 = travelAudio ? travelAudio.volume : 0;
-        const v2 = finalAudio ? finalAudio.volume : 0;
-        const D  = 900;
-        const t0 = performance.now();
-
-        (function fadeStep() {
-          const p = Math.min(1, (performance.now() - t0) / D);
-          if (travelAudio) travelAudio.volume = v1 * (1 - p);
-          if (finalAudio)  finalAudio.volume  = v2 * (1 - p);
-
-          if (p < 1) {
-            requestAnimationFrame(fadeStep);
-          } else {
-            try { travelAudio && travelAudio.pause(); } catch {}
-            try { finalAudio && finalAudio.pause(); } catch {}
+      
+          function finishCinematic(travelAudio, finalAudio, overlay, bgVideo, videoBg, blackout) {
+            if (travelAudio) travelAudio.pause();
+            if (finalAudio) finalAudio.pause();
             overlay.classList.remove('active');
             overlay.innerHTML = '';
-
+            if (videoBg) videoBg.style.opacity = '1';
+            if (bgVideo) bgVideo.play().catch(() => {});
             if (blackout) {
               blackout.classList.remove('visible');
-              setTimeout(() => blackout.classList.remove('show'), 500);
+              setTimeout(() => blackout.classList.remove('show'), 800);
             }
-
-            if (videoBg) videoBg.style.opacity = '1';
-            if (bgVideo) {
-              try { bgVideo.play(); } catch {}
-            }
-
-            // Resume main music after warp
-            if (window.mainMusic) {
-              try { window.mainMusic.play(); } catch {}
-            }
-
             isCinematic = false;
           }
-        })();
-      }
-    }
-  </script>
-
-  <!-- === Theme Cycle Script === -->
-  <script>
-    (function themeCycleInit(){
-      const btn = document.getElementById('themeToggleBtn');
-      const classes = ['theme-a','theme-b','theme-c','theme-d','theme-e'];
-      let idx = 0;
-
-      function apply(){
-        document.body.classList.remove(...classes);
-        document.body.classList.add(classes[idx]);
-      }
-      function next(){
-        idx = (idx + 1) % classes.length;
-        apply();
-        // Light pulse feedback
-        document.body.animate([
-          {filter:'brightness(3)'},
-          {filter:'brightness(1.25)'},
-          {filter:'brightness(3)'},
-          {filter:'brightness(1)'}
-        ],{duration:600,easing:'cubic-bezier(0.5,0,0.5,1)',fill:'forwards'});
-      }
-
-      // Init
-      apply();
-      btn.addEventListener('click',next);
-      document.addEventListener('keydown',e=>{ if(e.key==='t') next(); });
-    })();
-  </script>
-</body>
-</html>
+        </script>
