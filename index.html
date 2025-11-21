@@ -313,61 +313,7 @@ opacity:0;transition:opacity 1.1s ease}
 
   <!-- cursor elements -->
   <div id="cursorCore" class="cursor-core" aria-hidden="true"></div>
-  <audio id="retroIntro" src="retro-intro.mp3" preload="auto"></audio>
 <script>
-(function initRetroIntro(){
-  const audio = document.getElementById('retroIntro');
-  if(!audio) return;
-  audio.volume = 0.55;
-
-  // Try autoplay (will likely need user gesture)
-  audio.play().catch(()=>{
-    const resume=()=>{ audio.play().catch(()=>{}); document.removeEventListener('click',resume,true); };
-    document.addEventListener('click',resume,true);
-  });
-
-  // Optional: lightweight synth fallback if file missing
-  audio.addEventListener('error', ()=> startSynthFallback());
-
-  function startSynthFallback(){
-    if(!window.AudioContext) return;
-    const ctx = new AudioContext();
-    const master = ctx.createGain();
-    master.gain.value = 0.28;
-    master.connect(ctx.destination);
-
-    // Simple 80s swell pad
-    const pad = ctx.createOscillator();
-    pad.type='sawtooth';
-    pad.frequency.value=110;
-    const padGain = ctx.createGain();
-    padGain.gain.value=0;
-    pad.connect(padGain).connect(master);
-    pad.start();
-    padGain.gain.linearRampToValueAtTime(0.4, ctx.currentTime+2);
-    padGain.gain.linearRampToValueAtTime(0.0, ctx.currentTime+9);
-
-    // Arp notes
-    const notes = [220, 277, 330, 440, 554, 660];
-    let i=0;
-    function playArp(){
-      const o = ctx.createOscillator();
-      o.type='square';
-      o.frequency.value = notes[i % notes.length];
-      const g = ctx.createGain();
-      g.gain.value=0;
-      o.connect(g).connect(master);
-      o.start();
-      g.gain.linearRampToValueAtTime(0.35, ctx.currentTime+0.05);
-      g.gain.linearRampToValueAtTime(0.0, ctx.currentTime+0.45);
-      o.stop(ctx.currentTime+0.5);
-      i++;
-      if(i < 24) setTimeout(playArp, 250); // ~6s total
-    }
-    playArp();
-  }
-})();
-
   // Audio files
   // const AMBIENT_SRC = 'ambient-space.mp3';
   // const SUSPENSE_SRC = 'space-suspense.mp3';
@@ -653,7 +599,7 @@ document.addEventListener('keydown', e=>{
 </script>
 <script>
 const $ = s => document.querySelector(s);
-let isCinematic=false;
+let isCinematic = false;
 
 /* Config */
 const SOURCES=[
@@ -696,25 +642,48 @@ document.addEventListener('DOMContentLoaded',()=>{
 /* Start */
 function startCinematic(){
   if(isCinematic) return;
-  isCinematic=true;
+  isCinematic = true;
 
-  const overlay=$('#warpOverlay');
-  const bgVideo=$('#bg-video');
-  const videoBg=$('#videoBg');
+  const overlay = $('#warpOverlay');
+  const bgVideo = $('#bg-video');
+  const videoBg = $('#videoBg');
   overlay.classList.add('active');
-  overlay.style.background='#000';
-  overlay.innerHTML='';
+  overlay.style.background = '#000';
+  overlay.innerHTML = '';
 
-  if(bgVideo){try{bgVideo.pause();}catch{}}
-  if(videoBg) videoBg.style.opacity='0';
+  if(bgVideo){ try{ bgVideo.pause(); }catch{} }
+  if(videoBg) videoBg.style.opacity = '0';
 
-  // Audio elements
-  const ambient=document.createElement('audio');
-  ambient.src=AMBIENT_SRC; ambient.loop=true; ambient.volume=.55; ambient.preload='auto';
-  const suspense=document.createElement('audio');
-  suspense.src=SUSPENSE_SRC; suspense.loop=true; suspense.volume=0; suspense.preload='auto';
-  overlay.appendChild(ambient); overlay.appendChild(suspense);
-  safePlay(ambient); suspense.load();
+  // Audio elements (NOT muted)
+  const ambient = document.createElement('audio');
+  ambient.src = 'ambient-space.mp3';
+  ambient.loop = true;
+  ambient.volume = 0.7;
+  ambient.preload = 'auto';
+
+  const suspense = document.createElement('audio');
+  suspense.src = 'space-suspense.mp3';
+  suspense.loop = true;
+  suspense.volume = 0.0;
+  suspense.preload = 'auto';
+
+  overlay.appendChild(ambient);
+  overlay.appendChild(suspense);
+
+  // Try to play both, fallback to user gesture if blocked
+  function safePlay(a){
+    a.play().catch(()=>{
+      const resume = () => {
+        a.play().catch(()=>{});
+        document.removeEventListener('click', resume, true);
+        document.removeEventListener('keydown', resume, true);
+      };
+      document.addEventListener('click', resume, true);
+      document.addEventListener('keydown', resume, true);
+    });
+  }
+  safePlay(ambient);
+  suspense.load();
 
   // State
   let currentIndex=0;
