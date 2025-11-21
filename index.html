@@ -234,7 +234,7 @@
       text-align:center;
     }
 
-    /* Make hidden button subtle but definitely clickable */
+    /* Hidden button — subtle but clickable */
     #hiddenCelebrate{
       position:fixed;
       bottom:20px;
@@ -441,7 +441,7 @@
   <!-- Hidden celebrate button -->
   <button id="hiddenCelebrate" aria-label="Secret celebration"></button>
 
-  <!-- cursor elements -->
+  <!-- cursor core -->
   <div id="cursorCore" class="cursor-core" aria-hidden="true"></div>
 
   <!-- === All scripts in one place === -->
@@ -577,12 +577,12 @@
       }
     });
 
-    /* ===== Hidden warp cinematic ===== */
-    const hiddenBtn = document.getElementById('hiddenCelebrate');
+    /* ===== Hidden warp cinematic with 1.5s overlaps ===== */
+    const hiddenBtn   = document.getElementById('hiddenCelebrate');
     const warpOverlay = document.getElementById('warpOverlay');
-    const bgVideo = document.getElementById('bg-video');
-    const videoBg = document.getElementById('videoBg');
-    const blackout = document.getElementById('blackout');
+    const bgVideo     = document.getElementById('bg-video');
+    const videoBg     = document.getElementById('videoBg');
+    const blackout    = document.getElementById('blackout');
 
     const WARP_VIDEOS = [
       'Screensaver-1.mp4',
@@ -592,7 +592,9 @@
     ];
     const WARP_TRAVEL_AUDIO_SRC = 'Travel-through-space.mp3';
     const WARP_FINAL_AUDIO_SRC  = 'Blender-Hyperspace-Jump.mp3';
-    const VIDEO_FADE_SEC = 0.7;
+
+    const VIDEO_FADE_SEC     = 0.7;        // per-video fade
+    const VIDEO_OVERLAP_SEC  = 1.5;        // how much they overlap
     const AUDIO_CROSSFADE_MS = 1500;
 
     let isCinematic = false;
@@ -625,10 +627,10 @@
       safePlayAudio(travelAudio);
       finalAudio.load();
 
-      let currentIndex = 0;
-      let currentVid   = null;
-      let finalStarted = false;
-      let finished     = false;
+      let currentIndex  = 0;
+      let currentVid    = null;
+      let finished      = false;
+      let finalStarted  = false;
 
       finalAudio.addEventListener('ended', () => {
         if (finished) return;
@@ -641,58 +643,72 @@
         }, 1200);
       });
 
-      playNextVideo();
+      playSegment(currentIndex);
 
-      function playNextVideo(){
+      function playSegment(index){
         if (finished) return;
-
-        if (currentVid && currentVid.parentNode){
-          currentVid.parentNode.removeChild(currentVid);
-          currentVid = null;
-        }
-
-        if (currentIndex >= WARP_VIDEOS.length){
+        if (index >= WARP_VIDEOS.length){
           finishCinematic(travelAudio, finalAudio);
           return;
         }
 
-        if (currentIndex === WARP_VIDEOS.length - 1){
-          playFinalVideo();
-          return;
+        const isLast = (index === WARP_VIDEOS.length - 1);
+        const vid = createWarpVideo(WARP_VIDEOS[index]);
+
+        if (!currentVid){
+          // first video: just fade in from black
+          currentVid = vid;
+          warpOverlay.appendChild(vid);
+
+          vid.addEventListener('loadeddata', () => {
+            requestAnimationFrame(() => { vid.style.opacity = '1'; });
+          });
+          vid.play().catch(() => {});
+        } else {
+          // crossfade from currentVid to this new one
+          const previous = currentVid;
+          currentVid = vid;
+          vid.style.opacity = '0';
+          warpOverlay.appendChild(vid);
+
+          vid.addEventListener('loadeddata', () => {
+            vid.play().catch(() => {});
+            requestAnimationFrame(() => { vid.style.opacity = '1'; });
+            setTimeout(() => {
+              if (previous && previous.parentNode){
+                previous.parentNode.removeChild(previous);
+              }
+            }, VIDEO_OVERLAP_SEC * 1000 + 50);
+          });
         }
 
-        const vid = createWarpVideo(WARP_VIDEOS[currentIndex]);
-        currentVid = vid;
-        warpOverlay.appendChild(vid);
+        if (!isLast){
+          // plan the next segment to start VIDEO_OVERLAP_SEC before this one ends
+          let overlapTriggered = false;
+          vid.addEventListener('loadedmetadata', () => {
+            const duration = vid.duration || 0;
+            if (!duration || !isFinite(duration)) return;
 
-        vid.addEventListener('loadeddata', () => {
-          requestAnimationFrame(() => { vid.style.opacity = '1'; });
-        });
-
-        vid.play().catch(() => {});
-
-        vid.addEventListener('ended', () => {
-          currentIndex++;
-          playNextVideo();
-        });
-      }
-
-      function playFinalVideo(){
-        const vid = createWarpVideo(WARP_VIDEOS[WARP_VIDEOS.length - 1]);
-        vid.loop = true;
-        currentVid = vid;
-        warpOverlay.appendChild(vid);
-
-        vid.addEventListener('loadeddata', () => {
-          requestAnimationFrame(() => { vid.style.opacity = '1'; });
-
-          if (!finalStarted){
-            finalStarted = true;
-            crossfadeAudio(travelAudio, finalAudio, AUDIO_CROSSFADE_MS);
-          }
-        });
-
-        vid.play().catch(() => {});
+            vid.addEventListener('timeupdate', function onTimeUpdate(){
+              if (overlapTriggered) return;
+              if (vid.currentTime >= duration - VIDEO_OVERLAP_SEC){
+                overlapTriggered = true;
+                vid.removeEventListener('timeupdate', onTimeUpdate);
+                currentIndex = index + 1;
+                playSegment(currentIndex);
+              }
+            });
+          });
+        } else {
+          // last video (Screensaver-4): loop and start Blender audio once visible
+          vid.loop = true;
+          vid.addEventListener('loadedmetadata', () => {
+            if (!finalStarted){
+              finalStarted = true;
+              crossfadeAudio(travelAudio, finalAudio, AUDIO_CROSSFADE_MS);
+            }
+          });
+        }
       }
 
       function createWarpVideo(src){
