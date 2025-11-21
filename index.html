@@ -577,7 +577,7 @@
       }
     });
 
-    /* ===== Hidden warp cinematic with bigger overlaps + 3s black ===== */
+    /* ===== Hidden warp cinematic (Screensaver-1 + Screensaver-4 only) ===== */
     const hiddenBtn   = document.getElementById('hiddenCelebrate');
     const warpOverlay = document.getElementById('warpOverlay');
     const bgVideo     = document.getElementById('bg-video');
@@ -586,16 +586,15 @@
 
     const WARP_VIDEOS = [
       'Screensaver-1.mp4',
-      'Screensaver-2.mp4',
-      'Screensaver-3.mp4',
       'Screensaver-4.mp4'
     ];
     const WARP_TRAVEL_AUDIO_SRC = 'Travel-through-space.mp3';
     const WARP_FINAL_AUDIO_SRC  = 'Blender-Hyperspace-Jump.mp3';
 
     const VIDEO_FADE_SEC     = 0.7;
-    const VIDEO_OVERLAP_SEC  = 3.5;     // was 1.5, now +2s more overlap
+    const VIDEO_OVERLAP_SEC  = 3.5;
     const AUDIO_CROSSFADE_MS = 1500;
+    const BLACK_HOLD_MS      = 5000;  // 5s fade-to-black hold after Blender ends
 
     let isCinematic = false;
 
@@ -642,10 +641,10 @@
           blackout.classList.add('show');
           requestAnimationFrame(() => blackout.classList.add('visible'));
         }
-        // Hold full black for ~3 seconds total before returning
+        // Hold full black before returning
         setTimeout(() => {
           finishCinematic(travelAudio, finalAudio);
-        }, 3000);
+        }, BLACK_HOLD_MS);
       });
 
       playSegment(currentIndex);
