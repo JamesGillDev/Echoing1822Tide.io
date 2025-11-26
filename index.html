@@ -56,7 +56,7 @@
       --bg-color: #000;
     }
 
-    /* Theme variants */
+    /* === Enhanced Theme Variants (dramatic changes) === */
     body.theme-a {
       --accent-cyan:#00ffe0; --accent-magenta:#ff5ae6; --panel-bg:rgba(5,15,40,.65);
       font-family:'Segoe UI',system-ui,sans-serif;
@@ -104,40 +104,14 @@
       flex-direction:column;
     }
 
-    .video-background{
-      position:fixed;inset:0;z-index:0;overflow:hidden;
-      background:var(--bg-color);transition:opacity .6s ease;
-    }
-    .video-background video{
-      position:absolute;top:50%;left:50%;
-      min-width:100%;min-height:100%;
-      transform:translate(-50%,-50%);
-      object-fit:cover;
-      filter:contrast(1.02) saturate(1.05) brightness(0.9);
-      image-rendering:-webkit-optimize-contrast;
-      image-rendering:-webkit-crisp-edges;
-      image-rendering:crisp-edges;
-    }
+    .video-background{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--bg-color);transition:opacity .6s ease}
+    .video-background video{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;transform:translate(-50%,-50%);object-fit:cover;filter:contrast(1.02) saturate(1.05) brightness(0.9);image-rendering:-webkit-optimize-contrast;image-rendering:-webkit-crisp-edges;image-rendering:crisp-edges}
+    .video-background video::-webkit-media-controls{display:none !important}
+    .video-background video::-webkit-media-controls-enclosure{display:none !important}
+    .retro-overlay{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(transparent 60%, rgba(0,0,0,0.12) 100%), radial-gradient(circle at 50% 10%, rgba(255,255,255,0.03), transparent 20%);mix-blend-mode:overlay}
 
-    /* Kill controls / PiP */
-    video::-webkit-media-controls-enclosure,
-    video::-webkit-media-controls,
-    video::-webkit-media-controls-picture-in-picture-button {
-      display:none !important;
-    }
-
-    .retro-overlay{
-      position:fixed;inset:0;z-index:1;pointer-events:none;
-      background-image:
-        linear-gradient(transparent 60%, rgba(0,0,0,0.12) 100%),
-        radial-gradient(circle at 50% 10%, rgba(255,255,255,0.03), transparent 20%);
-      mix-blend-mode:overlay;
-    }
-
-    #blackout{
-      position:fixed;inset:0;background:#000;z-index:9000;
-      opacity:0;pointer-events:none;transition:opacity .8s ease;display:none;
-    }
+    /* Blackout overlay for fade-to-black */
+    #blackout{position:fixed;inset:0;background:#000;z-index:9000;opacity:0;pointer-events:none;transition:opacity .8s ease;display:none}
     #blackout.show{display:block}
     #blackout.visible{opacity:1}
 
@@ -152,74 +126,70 @@
       padding:3.5rem 1rem;
     }
 
-    .topbar{
-      width:min(1100px,100%);
-      background:rgba(0,0,0,0.55);
-      border:1px solid rgba(255,255,255,0.08);
-      -webkit-backdrop-filter:blur(10px);
-      backdrop-filter:blur(10px);
-      border-radius:14px;
-      padding:1rem 1rem 1.1rem;
-      box-shadow:0 8px 30px rgba(0,0,0,0.35);
+    /* High-contrast top bar */
+    .topbar{width:min(1100px,100%);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.08);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:14px;padding:1rem 1rem 1.1rem;box-shadow:0 8px 30px rgba(0,0,0,0.35)}
+    h1{font-size:clamp(1.4rem,2.6vw,2.2rem);text-align:center;margin-bottom:.7rem;text-shadow:0 2px 10px rgba(0,0,0,.65)}
+    .controls{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;justify-content:center}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;background:rgba(0,0,0,0.55);color:var(--text-color);border:1px solid rgba(255,255,255,0.16);padding:.6rem 1rem;border-radius:999px;cursor:pointer;transition:transform .18s,box-shadow .18s,background .2s;font-weight:600}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.55);background:rgba(0,0,0,0.7)}
+    .linkedin-btn{background:linear-gradient(90deg,#0077b5,#00a0dc);color:#fff;border:none;padding:.6rem 1rem}
+
+    /* Volume slider */
+    .volume-control{
+      display:inline-flex;
+      align-items:center;
+      gap:.35rem;
+      padding:.3rem .75rem;
+      border-radius:999px;
+      background:rgba(0,0,0,0.45);
+      border:1px solid rgba(255,255,255,0.12);
+      font-size:.8rem;
+      color:var(--muted);
     }
-    h1{
-      font-size:clamp(1.4rem,2.6vw,2.2rem);
-      text-align:center;
-      margin-bottom:.7rem;
-      text-shadow:0 2px 10px rgba(0,0,0,.65);
-    }
-    .controls{
-      display:flex;gap:.6rem;align-items:center;
-      flex-wrap:wrap;justify-content:center;
-    }
-    .btn{
-      display:inline-flex;align-items:center;gap:.5rem;
-      background:rgba(0,0,0,0.55);color:var(--text-color);
-      border:1px solid rgba(255,255,255,0.16);
-      padding:.6rem 1rem;border-radius:999px;
-      cursor:pointer;
-      transition:transform .18s,box-shadow .18s,background .2s;
+    .volume-control span{
       font-weight:600;
+      letter-spacing:.02em;
     }
-    .btn:hover{
-      transform:translateY(-2px);
-      box-shadow:0 10px 28px rgba(0,0,0,.55);
-      background:rgba(0,0,0,0.7);
-    }
-    .linkedin-btn{
-      background:linear-gradient(90deg,#0077b5,#00a0dc);
-      color:#fff;border:none;padding:.6rem 1rem;
-    }
-    .panels{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-      gap:1rem;
-      width:min(1100px,100%);
-      margin:0 auto;
-    }
-    .panel{
-      background:var(--panel-bg);
-      border-radius:12px;
-      padding:1rem;
-      box-shadow:0 8px 30px rgba(16,14,28,0.6);
-      -webkit-backdrop-filter:blur(var(--panel-blur));
-      backdrop-filter:blur(var(--panel-blur));
-      border:1px solid rgba(255,255,255,0.08);
-      transition:transform .22s,box-shadow .22s,background-color 0.4s ease;
-      min-height:90px;
-      position:relative;
+    .volume-control input[type="range"]{
+      -webkit-appearance:none;
+      appearance:none;
+      width:110px;
+      height:4px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.18);
+      outline:none;
       cursor:pointer;
     }
-    .panel:hover{
-      transform:translateY(-3px);
-      box-shadow:0 12px 40px rgba(16,14,28,0.8);
+    .volume-control input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));
+      box-shadow:0 0 8px rgba(0,0,0,.7);
+      border:none;
+      margin-top:-5px;
     }
+    .volume-control input[type="range"]::-moz-range-track{
+      height:4px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.18);
+    }
+    .volume-control input[type="range"]::-moz-range-thumb{
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));
+      border:none;
+      box-shadow:0 0 8px rgba(0,0,0,.7);
+    }
+
+    .panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;width:min(1100px,100%);margin:0 auto}
+    .panel{background:var(--panel-bg);border-radius:12px;padding:1rem;box-shadow:0 8px 30px rgba(16,14,28,0.6);-webkit-backdrop-filter:blur(var(--panel-blur));backdrop-filter:blur(var(--panel-blur));border:1px solid rgba(255,255,255,0.08);transition:transform .22s,box-shadow .22s,background-color 0.4s ease;min-height:90px;position:relative;cursor:pointer}
+    .panel:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(16,14,28,0.8)}
     .panel[aria-expanded="true"]{transform:translateY(-6px)}
-    .panel h3{
-      color:var(--muted);font-size:1rem;margin-bottom:.4rem;
-      display:flex;justify-content:space-between;align-items:center;gap:.5rem;
-      pointer-events:none;
-    }
+    .panel h3{color:var(--muted);font-size:1rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;pointer-events:none}
     .panel .body{color:var(--text-color);line-height:1.45;margin-top:0.5rem}
     .panel .body ul{padding-left:1.1rem}
     .panel .body li{margin:.25rem 0}
@@ -234,55 +204,28 @@
       text-align:center;
     }
 
-    /* Hidden button — visible but subtle */
-    #hiddenCelebrate{
-      position:fixed;
-      bottom:20px;
-      right:20px;
-      width:40px;
-      height:40px;
-      background:rgba(255,255,255,0.03);
-      border:1px solid rgba(0,255,255,0.35);
-      border-radius:50%;
-      cursor:pointer;
-      z-index:9999;
-      opacity:0.25;
-      pointer-events:auto;
-    }
-    #hiddenCelebrate:hover{
-      opacity:0.5;
-      box-shadow:0 0 10px rgba(0,255,255,0.7);
-    }
+    /* Hidden celebrate button */
+    #hiddenCelebrate{position:fixed;bottom:20px;right:20px;width:60px;height:60px;background:transparent;border:none;cursor:pointer;z-index:9999;opacity:0}
+    #hiddenCelebrate:hover{opacity:0.1}
 
-    .warp-overlay{
-      position:fixed;inset:0;z-index:10000;
-      pointer-events:none;display:none;overflow:hidden;
-    }
+    /* Warp speed overlay */
+    .warp-overlay{position:fixed;inset:0;z-index:10000;pointer-events:none;display:none;overflow:hidden}
     .warp-overlay.active{display:block}
+    .star{position:absolute;background:white;border-radius:50%;will-change:transform,width,height,opacity}
 
-    .warp-overlay video.warp-player{
-      position:absolute;inset:0;width:100%;height:100%;
-      object-fit:cover;background:#000;
-    }
-
-    .cursor-core{
-      position:fixed;width:16px;height:16px;border-radius:50%;
-      background:radial-gradient(circle, var(--accent-cyan), var(--accent-magenta));
-      pointer-events:none;z-index:9999;mix-blend-mode:screen;
-      transform:translate(-50%,-50%);
-      opacity:.95;transition:transform .06s linear;
-      box-shadow:0 0 20px var(--accent-cyan), 0 0 40px var(--accent-magenta);
-      display:none;
-    }
-    .cursor-trail-dot{
-      position:fixed;border-radius:50%;pointer-events:none;
-      z-index:9998;mix-blend-mode:screen;
-      transition:transform .12s linear,opacity .3s linear;
-    }
+    /* cursor trail */
+    .cursor-core{position:fixed;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle, var(--accent-cyan), var(--accent-magenta));pointer-events:none;z-index:9999;mix-blend-mode:screen;transform:translate(-50%,-50%);opacity:.95;transition:transform .06s linear;box-shadow:0 0 20px var(--accent-cyan), 0 0 40px var(--accent-magenta);display:none}
+    .cursor-trail-dot{position:fixed;border-radius:50%;pointer-events:none;z-index:9998;mix-blend-mode:screen;transition:transform .08s linear,opacity .2s linear}
 
     @media(max-width:520px){
       main.container{padding:2rem 1rem}
       .topbar{padding:.9rem}
+      .volume-control input[type="range"]{width:80px}
+    }
+
+    .warp-overlay video.warp-player{
+      position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+      background:#000;
     }
   </style>
 </head>
@@ -292,7 +235,7 @@
 
   <!-- Video + overlay -->
   <div class="video-background" aria-hidden="true" id="videoBg">
-    <video autoplay muted loop id="bg-video" preload="auto" disablePictureInPicture>
+    <video autoplay muted loop id="bg-video" preload="auto" disablePictureInPicture poster="">
       <source src="background-final.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
@@ -308,6 +251,10 @@
         <a class="btn linkedin-btn" href="https://www.linkedin.com/in/james-e-gill" target="_blank" rel="noopener noreferrer">Connect on LinkedIn</a>
         <button id="themeToggleBtn" class="btn" title="Theme change (T)">Theme change</button>
         <button id="mouseTrailToggleBtn" class="btn" title="Toggle mouse trail (M)">Mouse Trail</button>
+        <label class="volume-control">
+          <span>Vol</span>
+          <input id="volumeSlider" type="range" min="0" max="100" value="25" step="1" aria-label="Site music volume">
+        </label>
       </div>
     </div>
 
@@ -441,393 +388,397 @@
   <!-- Hidden celebrate button -->
   <button id="hiddenCelebrate" aria-label="Secret celebration"></button>
 
-  <!-- cursor core -->
+  <!-- cursor elements -->
   <div id="cursorCore" class="cursor-core" aria-hidden="true"></div>
 
-  <!-- === All scripts in one place === -->
+  <!-- === Core scripts: music, panels, theme, mouse trail === -->
   <script>
-  (function(){
-    /* ===== Main BTTF background music ===== */
     const mainMusic = document.getElementById('main-music');
-    if (mainMusic){
-      mainMusic.volume = 0.45;
+    const volumeSlider = document.getElementById('volumeSlider');
+
+    // Shared volume for all site audio (0.0–1.0)
+    let globalVolume = 0.25;
+
+    function applyVolume() {
+      if (mainMusic) mainMusic.volume = globalVolume;
+      if (window.__travelAudio) window.__travelAudio.volume = globalVolume;
+      if (window.__blenderAudio) window.__blenderAudio.volume = globalVolume;
+    }
+
+    // Start main music on load (browser may still block depending on autoplay policy)
+    if (mainMusic) {
+      mainMusic.volume = globalVolume;
       const p = mainMusic.play();
-      if (p && typeof p.then === 'function'){
-        p.catch(() => {
-          const resume = () => {
-            mainMusic.play().catch(() => {});
-            document.removeEventListener('click', resume);
-            document.removeEventListener('keydown', resume);
-          };
-          document.addEventListener('click', resume);
-          document.addEventListener('keydown', resume);
-        });
+      if (p && typeof p.then === 'function') {
+        p.catch(() => { /* autoplay blocked, we just fail silently */ });
       }
       window.mainMusic = mainMusic;
     }
 
-    /* ===== Panel toggle (1–5) ===== */
-    const panels = Array.from(document.querySelectorAll('.panel'));
-    function closeAllPanels(){
-      panels.forEach(p => {
-        const body = p.querySelector('.body');
-        p.setAttribute('aria-expanded','false');
-        if (body) body.hidden = true;
+    // Volume slider wiring
+    if (volumeSlider) {
+      volumeSlider.value = globalVolume * 100;
+      volumeSlider.addEventListener('input', (e) => {
+        const raw = Number(e.target.value);
+        const clamped = Math.min(100, Math.max(0, isNaN(raw) ? 25 : raw));
+        globalVolume = clamped / 100;
+        applyVolume();
       });
     }
-    function togglePanel(panel){
-      const isExpanded = panel.getAttribute('aria-expanded') === 'true';
-      const body = panel.querySelector('.body');
-      closeAllPanels();
-      if (!isExpanded && body){
-        panel.setAttribute('aria-expanded','true');
-        body.hidden = false;
-      }
-    }
-    panels.forEach(panel => {
-      const body = panel.querySelector('.body');
-      if (body) body.hidden = true;
-      panel.addEventListener('click', () => togglePanel(panel));
-      panel.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' '){
-          e.preventDefault();
-          togglePanel(panel);
-        }
-      });
-    });
 
-    /* ===== Theme cycle ===== */
-    const themeBtn = document.getElementById('themeToggleBtn');
-    const themeClasses = ['theme-a','theme-b','theme-c','theme-d','theme-e'];
-    let themeIdx = 0;
-    function applyTheme(){
-      document.body.classList.remove(...themeClasses);
-      document.body.classList.add(themeClasses[themeIdx]);
-    }
-    function nextTheme(){
-      themeIdx = (themeIdx + 1) % themeClasses.length;
-      applyTheme();
-      document.body.animate(
-        [
-          {filter:'brightness(3)'},
-          {filter:'brightness(1.25)'},
-          {filter:'brightness(3)'},
-          {filter:'brightness(1)'}
-        ],
-        {duration:600,easing:'cubic-bezier(0.5,0,0.5,1)',fill:'forwards'}
-      );
-    }
-    applyTheme();
-    if (themeBtn){
-      themeBtn.addEventListener('click', nextTheme);
-    }
-    document.addEventListener('keydown', e => {
-      if (e.key === 't' || e.key === 'T') nextTheme();
-    });
+    // Panel expand/collapse (buttons 1–5)
+    (function initPanels(){
+      const panels = Array.from(document.querySelectorAll('.panel'));
+      if (!panels.length) return;
 
-    /* ===== Mouse trail ===== */
-    const trailBtn = document.getElementById('mouseTrailToggleBtn');
-    const cursorCore = document.getElementById('cursorCore');
-    let trailEnabled = false;
-
-    function onPointerMove(e){
-      if (!cursorCore) return;
-      cursorCore.style.display = 'block';
-      cursorCore.style.left = e.clientX + 'px';
-      cursorCore.style.top  = e.clientY + 'px';
-
-      const dot = document.createElement('div');
-      dot.className = 'cursor-trail-dot';
-      dot.style.width  = '10px';
-      dot.style.height = '10px';
-      dot.style.left   = e.clientX + 'px';
-      dot.style.top    = e.clientY + 'px';
-      dot.style.background = 'rgba(0,255,255,0.7)';
-      document.body.appendChild(dot);
-
-      requestAnimationFrame(() => {
-        dot.style.transform = 'scale(0.4)';
-        dot.style.opacity = '0';
-      });
-      setTimeout(() => dot.remove(), 350);
-    }
-
-    function enableTrail(){
-      if (trailEnabled) return;
-      trailEnabled = true;
-      if (cursorCore) cursorCore.style.display = 'block';
-      document.addEventListener('pointermove', onPointerMove);
-    }
-
-    function disableTrail(){
-      if (!trailEnabled) return;
-      trailEnabled = false;
-      if (cursorCore) cursorCore.style.display = 'none';
-      document.removeEventListener('pointermove', onPointerMove);
-    }
-
-    if (trailBtn){
-      trailBtn.addEventListener('click', () => {
-        if (trailEnabled) disableTrail(); else enableTrail();
-      });
-    }
-    document.addEventListener('keydown', e => {
-      if (e.key === 'm' || e.key === 'M'){
-        if (trailEnabled) disableTrail(); else enableTrail();
-      }
-    });
-
-    /* ===== Hidden warp cinematic (Screensaver-1 + Screensaver-4 only) ===== */
-    const hiddenBtn   = document.getElementById('hiddenCelebrate');
-    const warpOverlay = document.getElementById('warpOverlay');
-    const bgVideo     = document.getElementById('bg-video');
-    const videoBg     = document.getElementById('videoBg');
-    const blackout    = document.getElementById('blackout');
-
-    const WARP_VIDEOS = [
-      'Screensaver-1.mp4',
-      'Screensaver-4.mp4'
-    ];
-    const WARP_TRAVEL_AUDIO_SRC = 'Travel-through-space.mp3';
-    const WARP_FINAL_AUDIO_SRC  = 'Blender-Hyperspace-Jump.mp3';
-
-    const VIDEO_FADE_SEC     = 0.7;
-    const VIDEO_OVERLAP_SEC  = 3.5;
-    const AUDIO_CROSSFADE_MS = 1500;
-    const BLACK_HOLD_MS      = 5000;  // 5s fade-to-black hold after Blender ends
-
-    let isCinematic = false;
-
-    function startCinematic(){
-      if (isCinematic) return;
-      isCinematic = true;
-
-      if (!warpOverlay) return;
-      warpOverlay.classList.add('active');
-      warpOverlay.style.background = '#000';
-      warpOverlay.innerHTML = '';
-
-      if (window.mainMusic){
-        try { window.mainMusic.pause(); } catch {}
-      }
-      if (bgVideo){
-        try { bgVideo.pause(); } catch {}
-      }
-      if (videoBg) videoBg.style.opacity = '0';
-
-      const travelAudio = new Audio(WARP_TRAVEL_AUDIO_SRC);
-      travelAudio.loop = true;
-      travelAudio.volume = 0.8;
-
-      const finalAudio = new Audio(WARP_FINAL_AUDIO_SRC);
-      finalAudio.loop = false;
-      finalAudio.volume = 0.0;
-
-      safePlayAudio(travelAudio);
-      finalAudio.load();
-
-      let currentIndex  = 0;
-      let currentVid    = null;
-      let finished      = false;
-      let finalStarted  = false;
-
-      finalAudio.addEventListener('ended', () => {
-        if (finished) return;
-        // Immediately hide any remaining warp videos
-        const vids = warpOverlay.querySelectorAll('video.warp-player');
-        vids.forEach(v => v.style.opacity = '0');
-
-        if (blackout){
-          blackout.classList.add('show');
-          requestAnimationFrame(() => blackout.classList.add('visible'));
-        }
-        // Hold full black before returning
-        setTimeout(() => {
-          finishCinematic(travelAudio, finalAudio);
-        }, BLACK_HOLD_MS);
-      });
-
-      playSegment(currentIndex);
-
-      function playSegment(index){
-        if (finished) return;
-        if (index >= WARP_VIDEOS.length){
-          finishCinematic(travelAudio, finalAudio);
-          return;
-        }
-
-        const isLast = (index === WARP_VIDEOS.length - 1);
-        const vid = createWarpVideo(WARP_VIDEOS[index]);
-
-        if (!currentVid){
-          currentVid = vid;
-          warpOverlay.appendChild(vid);
-
-          vid.addEventListener('loadeddata', () => {
-            requestAnimationFrame(() => { vid.style.opacity = '1'; });
-          });
-          vid.play().catch(() => {});
-        } else {
-          const previous = currentVid;
-          currentVid = vid;
-          vid.style.opacity = '0';
-          warpOverlay.appendChild(vid);
-
-          vid.addEventListener('loadeddata', () => {
-            vid.play().catch(() => {});
-            requestAnimationFrame(() => { vid.style.opacity = '1'; });
-            setTimeout(() => {
-              if (previous && previous.parentNode){
-                previous.parentNode.removeChild(previous);
-              }
-            }, VIDEO_OVERLAP_SEC * 1000 + 50);
-          });
-        }
-
-        if (!isLast){
-          let overlapTriggered = false;
-          vid.addEventListener('loadedmetadata', () => {
-            const duration = vid.duration || 0;
-            if (!duration || !isFinite(duration)) return;
-
-            vid.addEventListener('timeupdate', function onTimeUpdate(){
-              if (overlapTriggered) return;
-              if (vid.currentTime >= duration - VIDEO_OVERLAP_SEC){
-                overlapTriggered = true;
-                vid.removeEventListener('timeupdate', onTimeUpdate);
-                currentIndex = index + 1;
-                playSegment(currentIndex);
-              }
-            });
-          });
-        } else {
-          // last video: loop while Blender plays
-          vid.loop = true;
-          vid.addEventListener('loadedmetadata', () => {
-            if (!finalStarted){
-              finalStarted = true;
-              crossfadeAudio(travelAudio, finalAudio, AUDIO_CROSSFADE_MS);
-            }
-          });
-        }
-      }
-
-      function createWarpVideo(src){
-        const v = document.createElement('video');
-        v.className = 'warp-player';
-        v.src = src;
-        v.autoplay = true;
-        v.muted = true;
-        v.playsInline = true;
-        v.preload = 'auto';
-        v.loop = false;
-        v.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
-        v.setAttribute('disablePictureInPicture','true');
-        v.setAttribute('webkit-playsinline','true');
-        v.setAttribute('playsinline','true');
-        v.removeAttribute('controls');
-        v.style.position = 'absolute';
-        v.style.inset = '0';
-        v.style.width = '100%';
-        v.style.height = '100%';
-        v.style.objectFit = 'cover';
-        v.style.opacity = '0';
-        v.style.transition = `opacity ${VIDEO_FADE_SEC}s linear`;
-        v.style.background = '#000';
-        return v;
-      }
-
-      function safePlayAudio(audio){
-        audio.play().catch(() => {
-          const resume = () => {
-            audio.play().catch(() => {});
-            document.removeEventListener('click', resume, true);
-            document.removeEventListener('keydown', resume, true);
-          };
-          document.addEventListener('click', resume, true);
-          document.addEventListener('keydown', resume, true);
+      function closeAll() {
+        panels.forEach(p => {
+          const body = p.querySelector('.body');
+          p.setAttribute('aria-expanded', 'false');
+          if (body) body.hidden = true;
         });
       }
 
-      function crossfadeAudio(from, to, durationMs){
-        const start     = performance.now();
-        const fromVol0  = from.volume;
-        const toVol0    = to.volume;
-        const targetVol = 0.9;
-
-        safePlayAudio(to);
-
-        (function step(){
-          const now = performance.now();
-          const p = Math.min(1, (now - start) / durationMs);
-          from.volume = fromVol0 * (1 - p);
-          to.volume   = toVol0 + (targetVol - toVol0) * p;
-
-          if (p < 1){
-            requestAnimationFrame(step);
-          } else {
-            try { from.pause(); } catch {}
-          }
-        })();
+      function togglePanel(panel) {
+        const isExpanded = panel.getAttribute('aria-expanded') === 'true';
+        const body = panel.querySelector('.body');
+        closeAll();
+        if (!isExpanded && body) {
+          panel.setAttribute('aria-expanded','true');
+          body.hidden = false;
+        }
       }
 
-      function finishCinematic(travelAudio, finalAudio){
-        if (finished) return;
-        finished = true;
+      panels.forEach(panel => {
+        const body = panel.querySelector('.body');
+        if (body) body.hidden = true;
 
-        const v1 = travelAudio ? travelAudio.volume : 0;
-        const v2 = finalAudio ? finalAudio.volume : 0;
-        const D  = 800;
-        const t0 = performance.now();
-
-        (function step(){
-          const p = Math.min(1, (performance.now() - t0) / D);
-          if (travelAudio) travelAudio.volume = v1 * (1 - p);
-          if (finalAudio)  finalAudio.volume  = v2 * (1 - p);
-
-          if (p < 1){
-            requestAnimationFrame(step);
-          } else {
-            try { travelAudio && travelAudio.pause(); } catch {}
-            try { finalAudio && finalAudio.pause(); } catch {}
-
-            if (warpOverlay){
-              warpOverlay.classList.remove('active');
-              warpOverlay.innerHTML = '';
-            }
-
-            if (blackout){
-              blackout.classList.remove('visible');
-              setTimeout(() => blackout.classList.remove('show'), 500);
-            }
-
-            if (videoBg) videoBg.style.opacity = '1';
-            if (bgVideo){
-              try { bgVideo.play(); } catch {}
-            }
-            if (window.mainMusic){
-              try { window.mainMusic.play(); } catch {}
-            }
-
-            isCinematic = false;
+        panel.addEventListener('click', () => togglePanel(panel));
+        panel.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            togglePanel(panel);
           }
-        })();
-      }
-    }
-
-    if (hiddenBtn){
-      hiddenBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        startCinematic();
+        });
       });
-    }
-    document.addEventListener('keydown', e => {
-      if (e.key === 'h' || e.key === 'H'){
-        startCinematic();
-      }
-    });
+    })();
 
-  })();
+    // Theme cycle
+    (function themeCycleInit(){
+      const btn = document.getElementById('themeToggleBtn');
+      if (!btn) return;
+      const classes = ['theme-a','theme-b','theme-c','theme-d','theme-e'];
+      let idx = 0;
+
+      function applyTheme(){
+        document.body.classList.remove(...classes);
+        document.body.classList.add(classes[idx]);
+      }
+
+      applyTheme();
+
+      function nextTheme(){
+        idx = (idx + 1) % classes.length;
+        applyTheme();
+        document.body.animate(
+          [
+            {filter:'brightness(3)'},
+            {filter:'brightness(1.25)'},
+            {filter:'brightness(3)'},
+            {filter:'brightness(1)'}
+          ],
+          {duration:600,easing:'cubic-bezier(0.5,0,0.5,1)',fill:'forwards'}
+        );
+      }
+
+      btn.addEventListener('click', nextTheme);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 't' || e.key === 'T') nextTheme();
+      });
+    })();
+
+    // Mouse trail
+    (function mouseTrailInit(){
+      const btn = document.getElementById('mouseTrailToggleBtn');
+      const core = document.getElementById('cursorCore');
+      if (!btn || !core) return;
+
+      let enabled = false;
+      let moveHandler = null;
+
+      function enableTrail(){
+        if (enabled) return;
+        enabled = true;
+        core.style.display = 'block';
+
+        moveHandler = (e) => {
+          core.style.left = e.clientX + 'px';
+          core.style.top  = e.clientY + 'px';
+
+          const dot = document.createElement('div');
+          dot.className = 'cursor-trail-dot';
+          dot.style.width = '8px';
+          dot.style.height = '8px';
+          dot.style.left = e.clientX + 'px';
+          dot.style.top  = e.clientY + 'px';
+          dot.style.background = 'radial-gradient(circle, rgba(0,255,255,.9), rgba(255,0,255,.1))';
+          document.body.appendChild(dot);
+
+          requestAnimationFrame(() => {
+            dot.style.opacity = '0';
+            dot.style.transform = 'translate3d(0,4px,0) scale(0.8)';
+          });
+          setTimeout(() => dot.remove(), 400);
+        };
+
+        document.addEventListener('mousemove', moveHandler);
+      }
+
+      function disableTrail(){
+        enabled = false;
+        core.style.display = 'none';
+        if (moveHandler) {
+          document.removeEventListener('mousemove', moveHandler);
+          moveHandler = null;
+        }
+        document.querySelectorAll('.cursor-trail-dot').forEach(d => d.remove());
+      }
+
+      btn.addEventListener('click', () => {
+        if (enabled) disableTrail(); else enableTrail();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'm' || e.key === 'M') {
+          if (enabled) disableTrail(); else enableTrail();
+        }
+      });
+    })();
+  </script>
+
+  <!-- === Warp cinematic (hidden button) === -->
+  <script>
+    (function initWarp(){
+      const trigger = document.getElementById('hiddenCelebrate');
+      if (!trigger) return;
+
+      let isCinematic = false;
+
+      trigger.addEventListener('click', startCinematic);
+
+      function startCinematic(){
+        if (isCinematic) return;
+        isCinematic = true;
+
+        const overlay = document.getElementById('warpOverlay');
+        const bgVideo = document.getElementById('bg-video');
+        const videoBg = document.getElementById('videoBg');
+        const blackout = document.getElementById('blackout');
+
+        if (!overlay) { isCinematic = false; return; }
+
+        overlay.classList.add('active');
+        overlay.style.background = '#000';
+        overlay.innerHTML = '';
+
+        // Pause background visuals + music
+        if (bgVideo) { try { bgVideo.pause(); } catch(e){} }
+        if (videoBg) videoBg.style.opacity = '0';
+        if (window.mainMusic) { try { window.mainMusic.pause(); } catch(e){} }
+
+        // Audio: travel (Screensaver-1) then Blender (Screensaver-4)
+        const travelAudio = document.createElement('audio');
+        travelAudio.src = 'Travel-through-space.mp3';
+        travelAudio.loop = true;
+        travelAudio.preload = 'auto';
+
+        const blenderAudio = document.createElement('audio');
+        blenderAudio.src = 'Blender-Hyperspace-Jump.mp3';
+        blenderAudio.loop = false;
+        blenderAudio.preload = 'auto';
+
+        // expose for volume control
+        window.__travelAudio = travelAudio;
+        window.__blenderAudio = blenderAudio;
+        applyVolume();
+
+        overlay.appendChild(travelAudio);
+        overlay.appendChild(blenderAudio);
+
+        safePlayAudio(travelAudio);
+        blenderAudio.load();
+
+        const CROSSFADE_SEC = 2;
+        let currentVideo = null;
+
+        playScreensaver1();
+
+        // When Blender finishes, fade to black and then return
+        blenderAudio.addEventListener('ended', () => {
+          if (!isCinematic) return;
+          if (blackout) {
+            blackout.classList.add('show');
+            requestAnimationFrame(() => blackout.classList.add('visible'));
+          }
+          setTimeout(finish, 3000); // 3s fade to black
+        });
+
+        function playScreensaver1(){
+          const v1 = createVideo('Screensaver-1.mp4');
+          currentVideo = v1;
+          overlay.appendChild(v1);
+
+          v1.play().catch(()=>{});
+          v1.addEventListener('loadeddata', () => {
+            requestAnimationFrame(() => v1.style.opacity = '1');
+
+            const dur = v1.duration;
+            if (!isFinite(dur) || dur <= CROSSFADE_SEC + 0.5) {
+              v1.addEventListener('ended', playScreensaver4);
+            } else {
+              const crossAt = Math.max(0, dur - CROSSFADE_SEC);
+              const watcher = () => {
+                if (v1.currentTime >= crossAt) {
+                  v1.removeEventListener('timeupdate', watcher);
+                  playScreensaver4();
+                }
+              };
+              v1.addEventListener('timeupdate', watcher);
+            }
+          });
+        }
+
+        function playScreensaver4(){
+          if (!isCinematic) return;
+
+          const v2 = createVideo('Screensaver-4.mp4');
+          overlay.appendChild(v2);
+
+          // Start video and crossfade from Screensaver-1
+          v2.play().catch(()=>{});
+          v2.loop = true;
+
+          v2.addEventListener('loadeddata', () => {
+            v2.style.opacity = '0';
+            requestAnimationFrame(() => {
+              v2.style.opacity = '1';
+              v2.style.transition = `opacity ${CROSSFADE_SEC}s linear`;
+              if (currentVideo) {
+                currentVideo.style.transition = `opacity ${CROSSFADE_SEC}s linear`;
+                currentVideo.style.opacity = '0';
+                setTimeout(() => {
+                  if (currentVideo && currentVideo.parentNode) {
+                    currentVideo.parentNode.removeChild(currentVideo);
+                  }
+                  currentVideo = v2;
+                }, CROSSFADE_SEC * 1000 + 50);
+              } else {
+                currentVideo = v2;
+              }
+            });
+          });
+
+          // Crossfade audio from travel -> Blender
+          crossfadeAudios(travelAudio, blenderAudio, 1500);
+        }
+
+        function finish(){
+          if (!isCinematic) return;
+          isCinematic = false;
+
+          try { travelAudio.pause(); } catch(e){}
+          try { blenderAudio.pause(); } catch(e){}
+
+          if (overlay) {
+            overlay.classList.remove('active');
+            overlay.innerHTML = '';
+          }
+          const videoBg = document.getElementById('videoBg');
+          const bgVideo = document.getElementById('bg-video');
+          if (videoBg) videoBg.style.opacity = '1';
+          if (bgVideo) { try { bgVideo.play().catch(()=>{}); } catch(e){} }
+
+          if (window.mainMusic) {
+            applyVolume();
+            try { window.mainMusic.play().catch(()=>{}); } catch(e){}
+          }
+
+          const blackout = document.getElementById('blackout');
+          if (blackout) {
+            blackout.classList.remove('visible');
+            setTimeout(() => blackout.classList.remove('show'), 600);
+          }
+
+          window.__travelAudio = null;
+          window.__blenderAudio = null;
+        }
+
+        function createVideo(src){
+          const v = document.createElement('video');
+          v.className = 'warp-player';
+          v.muted = true;
+          v.autoplay = true;
+          v.playsInline = true;
+          v.preload = 'auto';
+          v.loop = false;
+          v.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
+          v.setAttribute('disablePictureInPicture','true');
+          v.setAttribute('webkit-playsinline','true');
+          v.setAttribute('playsinline','true');
+          v.removeAttribute('controls');
+          v.style.position = 'absolute';
+          v.style.inset = '0';
+          v.style.width = '100%';
+          v.style.height = '100%';
+          v.style.objectFit = 'cover';
+          v.style.opacity = '0';
+          v.style.transition = 'opacity 2s linear';
+          const source = document.createElement('source');
+          source.src = src;
+          source.type = 'video/mp4';
+          v.appendChild(source);
+          return v;
+        }
+
+        function safePlayAudio(audio){
+          const p = audio.play();
+          if (p && typeof p.then === 'function') {
+            p.catch(() => {
+              const resume = () => {
+                audio.play().catch(()=>{});
+                document.removeEventListener('click', resume, true);
+                document.removeEventListener('keydown', resume, true);
+              };
+              document.addEventListener('click', resume, true);
+              document.addEventListener('keydown', resume, true);
+            });
+          }
+        }
+
+        function crossfadeAudios(from, to, durationMs){
+          applyVolume();
+          const start = performance.now();
+          const fromStart = from.volume;
+          to.volume = 0.0;
+          if (to.paused) safePlayAudio(to);
+
+          (function step(){
+            if (!isCinematic) return;
+            const now = performance.now();
+            const t = Math.min(1, (now - start) / durationMs);
+            from.volume = fromStart * (1 - t);
+            to.volume = globalVolume * t;
+            if (t < 1) {
+              requestAnimationFrame(step);
+            } else {
+              from.volume = 0;
+              try { from.pause(); } catch(e){}
+              to.volume = globalVolume;
+            }
+          })();
+        }
+      }
+    })();
   </script>
 </body>
 </html>
