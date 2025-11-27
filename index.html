@@ -1,13 +1,14 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>EchoingTide1822 - James Gill</title>
 
   <style>
-    :root{
-      --panel-bg: rgba(10,10,30,0.55);
+    :root {
+      --panel-bg: rgba(10, 10, 30, 0.55);
       --accent-cyan: #00ffff;
       --accent-magenta: #ff00ff;
       --text-color: #e6e9ff;
@@ -15,40 +16,44 @@
       --panel-blur: 8px;
       --bg-color: #000;
     }
-    [data-theme="ocean"]{
-      --panel-bg: rgba(0,30,50,0.65);
+    [data-theme="ocean"] {
+      --panel-bg: rgba(0, 30, 50, 0.65);
       --accent-cyan: #00d4ff;
       --accent-magenta: #0088ff;
       --text-color: #d0f0ff;
       --muted: #7ac5ff;
       --bg-color: #001a2e;
     }
-    [data-theme="forest"]{
-      --panel-bg: rgba(10,35,15,0.65);
+
+    [data-theme="forest"] {
+      --panel-bg: rgba(10, 35, 15, 0.65);
       --accent-cyan: #00ff88;
       --accent-magenta: #88ff00;
       --text-color: #d8ffe8;
       --muted: #7dff99;
       --bg-color: #0a1f0a;
     }
-    [data-theme="sunset"]{
-      --panel-bg: rgba(50,20,10,0.65);
+
+    [data-theme="sunset"] {
+      --panel-bg: rgba(50, 20, 10, 0.65);
       --accent-cyan: #ff8800;
       --accent-magenta: #ff0066;
       --text-color: #ffe8d0;
       --muted: #ffaa77;
       --bg-color: #1a0f00;
     }
-    [data-theme="purple"]{
-      --panel-bg: rgba(40,10,50,0.65);
+
+    [data-theme="purple"] {
+      --panel-bg: rgba(40, 10, 50, 0.65);
       --accent-cyan: #cc00ff;
       --accent-magenta: #ff00cc;
       --text-color: #f0d0ff;
       --muted: #d088ff;
       --bg-color: #1a001a;
     }
-    [data-theme="neon"]{
-      --panel-bg: rgba(10,10,30,0.55);
+
+    [data-theme="neon"] {
+      --panel-bg: rgba(10, 10, 30, 0.55);
       --accent-cyan: #00ffff;
       --accent-magenta: #ff00ff;
       --text-color: #e6e9ff;
@@ -58,189 +63,416 @@
 
     /* === Enhanced Theme Variants (dramatic changes) === */
     body.theme-a {
-      --accent-cyan:#00ffe0; --accent-magenta:#ff5ae6; --panel-bg:rgba(5,15,40,.65);
-      font-family:'Segoe UI',system-ui,sans-serif;
+      --accent-cyan: #00ffe0;
+      --accent-magenta: #ff5ae6;
+      --panel-bg: rgba(5, 15, 40, .65);
+      font-family: 'Segoe UI', system-ui, sans-serif;
     }
+
     body.theme-b {
-      --accent-cyan:#ffca00; --accent-magenta:#ff5a00; --panel-bg:rgba(50,25,0,.55);
-      font-family:'Georgia',serif;
+      --accent-cyan: #ffca00;
+      --accent-magenta: #ff5a00;
+      --panel-bg: rgba(50, 25, 0, .55);
+      font-family: 'Georgia', serif;
     }
+
     body.theme-c {
-      --accent-cyan:#67ff00; --accent-magenta:#00ff95; --panel-bg:rgba(10,50,10,.55);
-      font-family:'Courier New',monospace;
+      --accent-cyan: #67ff00;
+      --accent-magenta: #00ff95;
+      --panel-bg: rgba(10, 50, 10, .55);
+      font-family: 'Courier New', monospace;
     }
+
     body.theme-d {
-      --accent-cyan:#bb66ff; --accent-magenta:#ff33aa; --panel-bg:rgba(35,10,50,.55);
-      font-family:'Trebuchet MS',sans-serif;
+      --accent-cyan: #bb66ff;
+      --accent-magenta: #ff33aa;
+      --panel-bg: rgba(35, 10, 50, .55);
+      font-family: 'Trebuchet MS', sans-serif;
     }
+
     body.theme-e {
-      --accent-cyan:#33d1ff; --accent-magenta:#ff3377; --panel-bg:rgba(0,0,0,.55);
-      font-family:'Verdana',sans-serif;
-    }
-    body.theme-a .btn{border-radius:40px;font-size:.95rem}
-    body.theme-b .btn{border-radius:8px;font-weight:700;font-size:1rem;letter-spacing:.5px}
-    body.theme-c .btn{border-radius:0;font-size:.9rem;border:2px solid var(--accent-cyan)}
-    body.theme-d .btn{border-radius:20px 4px 20px 4px;font-size:1.05rem}
-    body.theme-e .btn{border-radius:999px;font-size:.95rem;box-shadow:0 0 0 2px rgba(255,255,255,.08)}
-    body.theme-c .panel{border-radius:0}
-    body.theme-b .panel{border:2px solid rgba(255,255,255,.15)}
-    body.theme-d .panel{border-radius:24px}
-    body.theme-a .panel{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-    body.theme-e .panel{outline:1px solid rgba(255,255,255,.12)}
-    .panel-event-burst{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit}
-    .panel-event-particle{position:absolute;background:radial-gradient(circle,#fff,var(--accent-cyan));width:6px;height:6px;border-radius:50%;will-change:transform,opacity;mix-blend-mode:screen}
-
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{
-      height:100%;
-      font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
-      background:var(--bg-color);
-      color:var(--text-color);
-      transition:background-color 0.6s ease;
+      --accent-cyan: #33d1ff;
+      --accent-magenta: #ff3377;
+      --panel-bg: rgba(0, 0, 0, .55);
+      font-family: 'Verdana', sans-serif;
     }
 
-    body{
-      display:flex;
-      flex-direction:column;
+    body.theme-a .btn {
+      border-radius: 40px;
+      font-size: .95rem
     }
 
-    .video-background{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--bg-color);transition:opacity .6s ease}
-    .video-background video{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;transform:translate(-50%,-50%);object-fit:cover;filter:contrast(1.02) saturate(1.05) brightness(0.9);image-rendering:-webkit-optimize-contrast;image-rendering:-webkit-crisp-edges;image-rendering:crisp-edges}
-    .video-background video::-webkit-media-controls{display:none !important}
-    .video-background video::-webkit-media-controls-enclosure{display:none !important}
-    .retro-overlay{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(transparent 60%, rgba(0,0,0,0.12) 100%), radial-gradient(circle at 50% 10%, rgba(255,255,255,0.03), transparent 20%);mix-blend-mode:overlay}
+    body.theme-b .btn {
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: .5px
+    }
+
+    body.theme-c .btn {
+      border-radius: 0;
+      font-size: .9rem;
+      border: 2px solid var(--accent-cyan)
+    }
+
+    body.theme-d .btn {
+      border-radius: 20px 4px 20px 4px;
+      font-size: 1.05rem
+    }
+
+    body.theme-e .btn {
+      border-radius: 999px;
+      font-size: .95rem;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, .08)
+    }
+
+    body.theme-c .panel {
+      border-radius: 0
+    }
+
+    body.theme-b .panel {
+      border: 2px solid rgba(255, 255, 255, .15)
+    }
+
+    body.theme-d .panel {
+      border-radius: 24px
+    }
+
+    body.theme-a .panel {
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px)
+    }
+
+    body.theme-e .panel {
+      outline: 1px solid rgba(255, 255, 255, .12)
+    }
+
+    .panel-event-burst {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      border-radius: inherit
+    }
+
+    .panel-event-particle {
+      position: absolute;
+      background: radial-gradient(circle, #fff, var(--accent-cyan));
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      will-change: transform, opacity;
+      mix-blend-mode: screen
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.6s ease;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .video-background {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background: var(--bg-color);
+      transition: opacity .6s ease
+    }
+
+    .video-background video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      filter: contrast(1.02) saturate(1.05) brightness(0.9);
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: -webkit-crisp-edges;
+      image-rendering: crisp-edges
+    }
+
+    .video-background video::-webkit-media-controls {
+      display: none !important
+    }
+
+    .video-background video::-webkit-media-controls-enclosure {
+      display: none !important
+    }
+
+    .retro-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background-image: linear-gradient(transparent 60%, rgba(0, 0, 0, 0.12) 100%), radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.03), transparent 20%);
+      mix-blend-mode: overlay
+    }
 
     /* Blackout overlay for final fade-to-black */
-    #blackout{
-      position:fixed;
-      inset:0;
-      background:#000;
-      z-index:9000;
-      opacity:0;
-      pointer-events:none;
-      transition:opacity .8s ease;
-      display:none;
+    #blackout {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .8s ease;
+      display: none;
     }
-    #blackout.show{display:block}
-    #blackout.visible{opacity:1}
 
-    main.container{
-      position:relative;
-      z-index:2;
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:1rem;
-      align-items:center;
-      padding:3.5rem 1rem;
+    #blackout.show {
+      display: block
+    }
+
+    #blackout.visible {
+      opacity: 1
+    }
+
+    main.container {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+      padding: 3.5rem 1rem;
     }
 
     /* High-contrast top bar */
-    .topbar{width:min(1100px,100%);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.08);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:14px;padding:1rem 1rem 1.1rem;box-shadow:0 8px 30px rgba(0,0,0,0.35)}
-    h1{font-size:clamp(1.4rem,2.6vw,2.2rem);text-align:center;margin-bottom:.7rem;text-shadow:0 2px 10px rgba(0,0,0,.65)}
-    .controls{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;justify-content:center}
-    .btn{display:inline-flex;align-items:center;gap:.5rem;background:rgba(0,0,0,0.55);color:var(--text-color);border:1px solid rgba(255,255,255,0.16);padding:.6rem 1rem;border-radius:999px;cursor:pointer;transition:transform .18s,box-shadow .18s,background .2s;font-weight:600}
-    .btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.55);background:rgba(0,0,0,0.7)}
-    .linkedin-btn{background:linear-gradient(90deg,#0077b5,#00a0dc);color:#fff;border:none;padding:.6rem 1rem}
-
-    .volume-wrapper{
-      display:flex;
-      align-items:center;
-      gap:.4rem;
-      font-size:.85rem;
-      color:var(--muted);
-    }
-    .volume-wrapper input[type="range"]{
-      width:110px;
-      cursor:pointer;
+    .topbar {
+      width: min(1100px, 100%);
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      border-radius: 14px;
+      padding: 1rem 1rem 1.1rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35)
     }
 
-    .panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;width:min(1100px,100%);margin:0 auto}
-    .panel{background:var(--panel-bg);border-radius:12px;padding:1rem;box-shadow:0 8px 30px rgba(16,14,28,0.6);-webkit-backdrop-filter:blur(var(--panel-blur));backdrop-filter:blur(var(--panel-blur));border:1px solid rgba(255,255,255,0.08);transition:transform .22s,box-shadow .22s,background-color 0.4s ease;min-height:90px;position:relative;cursor:pointer}
-    .panel:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(16,14,28,0.8)}
-    .panel[aria-expanded="true"]{transform:translateY(-6px)}
-    .panel h3{color:var(--muted);font-size:1rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;pointer-events:none}
-    .panel .body{color:var(--text-color);line-height:1.45;margin-top:0.5rem}
-    .panel .body ul{padding-left:1.1rem}
-    .panel .body li{margin:.25rem 0}
-    .panel .body h4{margin:.6rem 0 .25rem;color:var(--accent-cyan);font-size:1rem}
+    h1 {
+      font-size: clamp(1.4rem, 2.6vw, 2.2rem);
+      text-align: center;
+      margin-bottom: .7rem;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, .65)
+    }
 
-    footer{
-      position:relative;
-      z-index:2;
-      padding:0.75rem 1rem 1rem;
-      color:rgba(151,160,255,0.85);
-      font-size:.9rem;
-      text-align:center;
+    .controls {
+      display: flex;
+      gap: .6rem;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: rgba(0, 0, 0, 0.55);
+      color: var(--text-color);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: .6rem 1rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform .18s, box-shadow .18s, background .2s;
+      font-weight: 600
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, .55);
+      background: rgba(0, 0, 0, 0.7)
+    }
+
+    .linkedin-btn {
+      background: linear-gradient(90deg, #0077b5, #00a0dc);
+      color: #fff;
+      border: none;
+      padding: .6rem 1rem
+    }
+
+    .volume-wrapper {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+
+    .volume-wrapper input[type="range"] {
+      width: 110px;
+      cursor: pointer;
+    }
+
+    .panels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      width: min(1100px, 100%);
+      margin: 0 auto
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 8px 30px rgba(16, 14, 28, 0.6);
+      -webkit-backdrop-filter: blur(var(--panel-blur));
+      backdrop-filter: blur(var(--panel-blur));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform .22s, box-shadow .22s, background-color 0.4s ease;
+      min-height: 90px;
+      position: relative;
+      cursor: pointer
+    }
+
+    .panel:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(16, 14, 28, 0.8)
+    }
+
+    .panel[aria-expanded="true"] {
+      transform: translateY(-6px)
+    }
+
+    .panel h3 {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: .4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .5rem;
+      pointer-events: none
+    }
+
+    .panel .body {
+      color: var(--text-color);
+      line-height: 1.45;
+      margin-top: 0.5rem
+    }
+
+    .panel .body ul {
+      padding-left: 1.1rem
+    }
+
+    .panel .body li {
+      margin: .25rem 0
+    }
+
+    .panel .body h4 {
+      margin: .6rem 0 .25rem;
+      color: var(--accent-cyan);
+      font-size: 1rem
+    }
+
+    footer {
+      position: relative;
+      z-index: 2;
+      padding: 0.75rem 1rem 1rem;
+      color: rgba(151, 160, 255, 0.85);
+      font-size: .9rem;
+      text-align: center;
     }
 
     /* Hidden celebrate button */
-    #hiddenCelebrate{
-      position:fixed;
-      bottom:20px;
-      right:20px;
-      width:60px;
-      height:60px;
-      background:transparent;
-      border:none;
-      cursor:pointer;
-      z-index:9999;
-      opacity:0;
+    #hiddenCelebrate {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      z-index: 9999;
+      opacity: 0;
     }
-    #hiddenCelebrate:hover{opacity:0.1}
+
+    #hiddenCelebrate:hover {
+      opacity: 0.1
+    }
 
     /* Warp overlay */
-    .warp-overlay{
-      position:fixed;
-      inset:0;
-      z-index:10000;
-      pointer-events:none;
-      display:none;
-      overflow:hidden;
-      background:#000;
+    .warp-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      pointer-events: none;
+      display: none;
+      overflow: hidden;
+      background: #000;
     }
-    .warp-overlay.active{
-      display:block;
+
+    .warp-overlay.active {
+      display: block;
     }
-    .warp-overlay video.warp-player{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      object-fit:cover;
+
+    .warp-overlay video.warp-player {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     /* cursor trail */
-    .cursor-core{
-      position:fixed;
-      width:16px;
-      height:16px;
-      border-radius:50%;
-      background:radial-gradient(circle, var(--accent-cyan), var(--accent-magenta));
-      pointer-events:none;
-      z-index:9999;
-      mix-blend-mode:screen;
-      transform:translate(-50%,-50%);
-      opacity:.95;
-      transition:transform .06s linear;
-      box-shadow:0 0 20px var(--accent-cyan), 0 0 40px var(--accent-magenta);
-      display:none;
-    }
-    .cursor-trail-dot{
-      position:fixed;
-      border-radius:50%;
-      pointer-events:none;
-      z-index:9998;
-      mix-blend-mode:screen;
-      transition:transform .08s linear,opacity .2s linear;
+    .cursor-core {
+      position: fixed;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--accent-cyan), var(--accent-magenta));
+      pointer-events: none;
+      z-index: 9999;
+      mix-blend-mode: screen;
+      transform: translate(-50%, -50%);
+      opacity: .95;
+      transition: transform .06s linear;
+      box-shadow: 0 0 20px var(--accent-cyan), 0 0 40px var(--accent-magenta);
+      display: none;
     }
 
-    @media(max-width:520px){
-      main.container{padding:2rem 1rem}
-      .topbar{padding:.9rem}
+    .cursor-trail-dot {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      mix-blend-mode: screen;
+      transition: transform .08s linear, opacity .2s linear;
+    }
+
+    @media(max-width:520px) {
+      main.container {
+        padding: 2rem 1rem
+      }
+
+      .topbar {
+        padding: .9rem
+      }
     }
   </style>
 </head>
+
 <body data-theme="neon">
   <!-- Main background music -->
   <audio id="main-music" src="Back-to-the-Future-(End Credits).mp3" loop></audio>
@@ -260,7 +492,8 @@
     <div class="topbar">
       <h1>Career Lifeline – James Gill</h1>
       <div class="controls" role="toolbar" aria-label="Page controls">
-        <a class="btn linkedin-btn" href="https://www.linkedin.com/in/james-e-gill" target="_blank" rel="noopener noreferrer">Connect on LinkedIn</a>
+        <a class="btn linkedin-btn" href="https://www.linkedin.com/in/james-e-gill" target="_blank"
+          rel="noopener noreferrer">Connect on LinkedIn</a>
         <button id="themeToggleBtn" class="btn" title="Theme change (T)">Theme change</button>
         <button id="mouseTrailToggleBtn" class="btn" title="Toggle mouse trail (M)">Mouse Trail</button>
         <div class="volume-wrapper">
@@ -410,26 +643,26 @@
     let globalVolume = 0.25; // start at 25%
     const audioSet = new Set();
 
-    function registerAudio(a){
+    function registerAudio(a) {
       if (!a) return;
       audioSet.add(a);
       a.volume = globalVolume;
     }
-    function unregisterAudio(a){
+    function unregisterAudio(a) {
       if (!a) return;
       audioSet.delete(a);
     }
-    function applyVolume(){
+    function applyVolume() {
       audioSet.forEach(a => {
-        try { a.volume = globalVolume; } catch {}
+        try { a.volume = globalVolume; } catch { }
       });
     }
 
-    function safePlayAudio(a){
+    function safePlayAudio(a) {
       if (!a) return;
       a.play().catch(() => {
         const resume = () => {
-          a.play().catch(()=>{});
+          a.play().catch(() => { });
           document.removeEventListener('pointerdown', resume, true);
           document.removeEventListener('keydown', resume, true);
         };
@@ -440,12 +673,12 @@
 
     // ===== Main background music (BTTF) =====
     const mainMusic = document.getElementById('main-music');
-    if (mainMusic){
+    if (mainMusic) {
       mainMusic.loop = true;
       registerAudio(mainMusic);
       window.mainMusic = mainMusic; // expose globally
 
-      function tryPlayMainMusic(){
+      function tryPlayMainMusic() {
         safePlayAudio(mainMusic);
       }
       document.addEventListener('DOMContentLoaded', tryPlayMainMusic);
@@ -491,67 +724,67 @@
     });
 
     // ===== Theme cycle =====
-    (function themeCycleInit(){
+    (function themeCycleInit() {
       const btn = document.getElementById('themeToggleBtn');
-      if(!btn) return;
+      if (!btn) return;
 
-      const classes = ['theme-a','theme-b','theme-c','theme-d','theme-e'];
+      const classes = ['theme-a', 'theme-b', 'theme-c', 'theme-d', 'theme-e'];
       let idx = 0;
 
-      function apply(){
+      function apply() {
         document.body.classList.remove(...classes);
         document.body.classList.add(classes[idx]);
       }
-      function next(){
+      function next() {
         idx = (idx + 1) % classes.length;
         apply();
         document.body.animate(
           [
-            {filter:'brightness(3)'},
-            {filter:'brightness(1.25)'},
-            {filter:'brightness(3)'},
-            {filter:'brightness(1)'}
+            { filter: 'brightness(3)' },
+            { filter: 'brightness(1.25)' },
+            { filter: 'brightness(3)' },
+            { filter: 'brightness(1)' }
           ],
-          {duration:600,easing:'cubic-bezier(0.5,0,0.5,1)',fill:'forwards'}
+          { duration: 600, easing: 'cubic-bezier(0.5,0,0.5,1)', fill: 'forwards' }
         );
       }
 
       apply();
-      btn.addEventListener('click',next);
-      document.addEventListener('keydown',e=>{ if(e.key==='t') next(); });
+      btn.addEventListener('click', next);
+      document.addEventListener('keydown', e => { if (e.key === 't') next(); });
     })();
 
     // ===== Mouse trail =====
-    (function mouseTrailInit(){
+    (function mouseTrailInit() {
       const core = document.getElementById('cursorCore');
       const toggleBtn = document.getElementById('mouseTrailToggleBtn');
-      if(!core || !toggleBtn) return;
+      if (!core || !toggleBtn) return;
 
       let enabled = false;
       let trailDots = [];
 
-      function enableTrail(){
+      function enableTrail() {
         enabled = true;
         core.style.display = 'block';
       }
-      function disableTrail(){
+      function disableTrail() {
         enabled = false;
         core.style.display = 'none';
         trailDots.forEach(dot => dot.remove());
         trailDots = [];
       }
 
-      toggleBtn.addEventListener('click', ()=>{
+      toggleBtn.addEventListener('click', () => {
         enabled ? disableTrail() : enableTrail();
       });
-      document.addEventListener('keydown', e=>{
-        if(e.key.toLowerCase() === 'm'){
+      document.addEventListener('keydown', e => {
+        if (e.key.toLowerCase() === 'm') {
           enabled ? disableTrail() : enableTrail();
         }
       });
 
-      document.addEventListener('mousemove', e=>{
-        if(!enabled) return;
+      document.addEventListener('mousemove', e => {
+        if (!enabled) return;
         core.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
 
         const dot = document.createElement('div');
@@ -565,11 +798,11 @@
         document.body.appendChild(dot);
         trailDots.push(dot);
 
-        requestAnimationFrame(()=>{
+        requestAnimationFrame(() => {
           dot.style.transform = 'translateY(8px)';
           dot.style.opacity = '0';
         });
-        setTimeout(()=>{
+        setTimeout(() => {
           dot.remove();
           trailDots = trailDots.filter(d => d !== dot);
         }, 350);
@@ -577,11 +810,11 @@
     })();
 
     // ===== Volume slider =====
-    (function volumeInit(){
+    (function volumeInit() {
       const slider = document.getElementById('volumeSlider');
-      if(!slider) return;
+      if (!slider) return;
 
-      slider.addEventListener('input', ()=>{
+      slider.addEventListener('input', () => {
         globalVolume = parseFloat(slider.value) || 0;
         applyVolume();
       });
@@ -590,9 +823,9 @@
     })();
 
     // ===== Final fade-to-black helper =====
-    function fadeToBlack(sec, cb){
+    function fadeToBlack(sec, cb) {
       const blackout = qs('#blackout');
-      if (!blackout){
+      if (!blackout) {
         cb && cb();
         return;
       }
@@ -603,7 +836,7 @@
       }, sec * 1000);
     }
 
-    function clearBlack(){
+    function clearBlack() {
       const blackout = qs('#blackout');
       if (!blackout) return;
       blackout.classList.remove('visible');
@@ -611,7 +844,7 @@
     }
 
     // ===== Hidden button cinematic: S1 → S4 → S5 =====
-    (function cinematicInit(){
+    (function cinematicInit() {
       const hiddenBtn = document.getElementById('hiddenCelebrate');
       if (!hiddenBtn) return;
 
@@ -621,20 +854,20 @@
       const STAGE2_VIDEO = 'Screensaver-4.mp4';
       const STAGE3_VIDEO = 'Screensaver-5.mp4';
 
-      const AUDIO_TRAVEL  = 'Travel-through-space.mp3';
+      const AUDIO_TRAVEL = 'Travel-through-space.mp3';
       const AUDIO_BLENDER = 'Blender-Hyperspace-Jump.mp3';
-      const AUDIO_ALIEN   = 'Alien-Beach-Waves.mp3';
+      const AUDIO_ALIEN = 'Alien-Beach-Waves.mp3';
 
       const VIDEO_CROSSFADE_SEC = 2;     // overlap between videos
-      const FINAL_BLACK_SEC     = 3;     // fade-to-black at very end
-      const ALIEN_PLAY_MS       = 60000; // 60s of Alien-Beach audio
-      const ALIEN_FADE_MS       = 1500;  // fade in/out
+      const FINAL_BLACK_SEC = 3;     // fade-to-black at very end
+      const ALIEN_PLAY_MS = 60000; // 60s of Alien-Beach audio
+      const ALIEN_FADE_MS = 1500;  // fade in/out
 
       hiddenBtn.addEventListener('click', () => {
         if (!isCinematic) startCinematic();
       });
 
-      function createVideo(src){
+      function createVideo(src) {
         const vid = document.createElement('video');
         vid.src = src;
         vid.className = 'warp-player';
@@ -649,7 +882,7 @@
         return vid;
       }
 
-      function startCinematic(){
+      function startCinematic() {
         isCinematic = true;
 
         const overlay = qs('#warpOverlay');
@@ -663,24 +896,24 @@
         overlay.innerHTML = '';
 
         if (videoBg) videoBg.style.opacity = '0';
-        if (bgVideo){
-          try { bgVideo.pause(); } catch {}
+        if (bgVideo) {
+          try { bgVideo.pause(); } catch { }
         }
 
-        if (window.mainMusic){
-          try { window.mainMusic.pause(); } catch {}
+        if (window.mainMusic) {
+          try { window.mainMusic.pause(); } catch { }
         }
 
-        const travelAudio  = new Audio(AUDIO_TRAVEL);
-        travelAudio.loop   = true;
+        const travelAudio = new Audio(AUDIO_TRAVEL);
+        travelAudio.loop = true;
         registerAudio(travelAudio);
 
         const blenderAudio = new Audio(AUDIO_BLENDER);
-        blenderAudio.loop  = false;
+        blenderAudio.loop = false;
         registerAudio(blenderAudio);
 
-        const alienAudio   = new Audio(AUDIO_ALIEN);
-        alienAudio.loop    = false;
+        const alienAudio = new Audio(AUDIO_ALIEN);
+        alienAudio.loop = false;
         registerAudio(alienAudio);
 
         applyVolume();
@@ -696,7 +929,7 @@
         travelAudio.currentTime = 0;
         safePlayAudio(travelAudio);
 
-        v1.play().catch(()=>{});
+        v1.play().catch(() => { });
         v1.addEventListener('loadeddata', () => {
           requestAnimationFrame(() => { v1.style.opacity = '1'; });
         });
@@ -705,9 +938,9 @@
           const dur = v1.duration || 0;
           const crossAt = Math.max(1, dur - VIDEO_CROSSFADE_SEC - 0.5);
 
-          v1.addEventListener('timeupdate', function onTime(){
+          v1.addEventListener('timeupdate', function onTime() {
             if (stage2Started) return;
-            if (v1.currentTime >= crossAt){
+            if (v1.currentTime >= crossAt) {
               v1.removeEventListener('timeupdate', onTime);
               startStage2(overlay, v1, travelAudio, blenderAudio, alienAudio);
             }
@@ -720,13 +953,14 @@
         });
 
         // ----- Stage 2: Screensaver-4 + Blender -----
-        function startStage2(overlay, v1, travelAudio, blenderAudio){
+        // ----- Stage 2: Screensaver-4 + Blender -----
+        function startStage2(overlay, v1, travelAudio, blenderAudio, alienAudio) {
           if (stage2Started) return;
           stage2Started = true;
 
           v2 = createVideo(STAGE2_VIDEO);
           overlay.appendChild(v2);
-          v2.play().catch(()=>{});
+          v2.play().catch(() => { });
 
           // Visual crossfade 1 -> 4
           requestAnimationFrame(() => {
@@ -734,50 +968,47 @@
             if (v1) v1.style.opacity = '0';
           });
           setTimeout(() => {
-            if (v1 && v1.parentNode){ v1.parentNode.removeChild(v1); }
+            if (v1 && v1.parentNode) { v1.parentNode.removeChild(v1); }
           }, VIDEO_CROSSFADE_SEC * 1000 + 80);
 
           // Audio crossfade Travel -> Blender
-          const startTime      = performance.now();
+          const startTime = performance.now();
           const startTravelVol = travelAudio.volume;
 
           blenderAudio.volume = 0;
           blenderAudio.currentTime = 0;
           safePlayAudio(blenderAudio);
 
-          (function audioStep(){
+          (function audioStep() {
             const p = Math.min(1, (performance.now() - startTime) / 1200);
             try {
-              travelAudio.volume  = startTravelVol * (1 - p);
+              travelAudio.volume = startTravelVol * (1 - p);
               blenderAudio.volume = globalVolume * p;
-            } catch {}
-            if (p < 1) requestAnimationFrame(audioStep);
-            else {
-              try { travelAudio.pause(); } catch {}
+            } catch { }
+            if (p < 1) {
+              requestAnimationFrame(audioStep);
+            } else {
+              try { travelAudio.pause(); } catch { }
             }
           })();
 
-          v2.addEventListener('loadedmetadata', () => {
-            const dur2 = v2.duration || 0;
-            const crossAt2 = Math.max(1, dur2 - VIDEO_CROSSFADE_SEC - 0.5);
-
-            v2.addEventListener('timeupdate', function onTime2(){
-              if (stage3Started) return;
-              if (v2.currentTime >= crossAt2){
-                v2.removeEventListener('timeupdate', onTime2);
-                startStage3(overlay, v2, blenderAudio, alienAudio, travelAudio);
-              }
+          // When Screensaver-4 ends, go to 5 seconds of black, then Stage 3
+          v2.addEventListener('ended', () => {
+            fadeToBlack(5, () => {
+              startStage3(overlay, v2, blenderAudio, alienAudio, travelAudio);
+              // let S5 be visible, then soften the blackout off
+              setTimeout(clearBlack, 600);
             });
           });
 
           v2.addEventListener('error', () => {
-            // If S4 fails, move straight to Stage 3 (S5)
+            // If S4 fails, move straight to Stage 3 (S5) without special fade
             startStage3(overlay, v2, blenderAudio, alienAudio, travelAudio);
           });
         }
 
         // ----- Stage 3: Screensaver-5 + Alien Beach Waves -----
-        function startStage3(overlay, v2, blenderAudio, alienAudio, travelAudio){
+        function startStage3(overlay, v2, blenderAudio, alienAudio, travelAudio) {
           if (stage3Started) return;
           stage3Started = true;
 
@@ -791,7 +1022,7 @@
             if (v2) v2.style.opacity = '0';
           });
 
-          v3.play().catch(()=>{});
+          v3.play().catch(() => { });
 
           // If load succeeds, this just reinforces the same behavior
           v3.addEventListener('loadeddata', () => {
@@ -818,11 +1049,11 @@
           });
 
           setTimeout(() => {
-            if (v2 && v2.parentNode){ v2.parentNode.removeChild(v2); }
+            if (v2 && v2.parentNode) { v2.parentNode.removeChild(v2); }
           }, VIDEO_CROSSFADE_SEC * 1000 + 80);
 
           // Make sure earlier audio is quiet
-          try { travelAudio.pause(); } catch {}
+          try { travelAudio.pause(); } catch { }
           // Blender will fade out while Alien fades in
           const fadeStart = performance.now();
           const startBlenderVol = blenderAudio.volume;
@@ -831,15 +1062,15 @@
           alienAudio.currentTime = 0;
           safePlayAudio(alienAudio);
 
-          (function audioXFade(){
+          (function audioXFade() {
             const p = Math.min(1, (performance.now() - fadeStart) / ALIEN_FADE_MS);
             try {
               blenderAudio.volume = startBlenderVol * (1 - p);
-              alienAudio.volume   = globalVolume * p;
-            } catch {}
+              alienAudio.volume = globalVolume * p;
+            } catch { }
             if (p < 1) requestAnimationFrame(audioXFade);
             else {
-              try { blenderAudio.pause(); } catch {}
+              try { blenderAudio.pause(); } catch { }
             }
           })();
 
@@ -848,14 +1079,14 @@
             const fadeOutStart = performance.now();
             const startAlienVol = alienAudio.volume;
 
-            (function fadeOut(){
+            (function fadeOut() {
               const p = Math.min(1, (performance.now() - fadeOutStart) / ALIEN_FADE_MS);
               try {
                 alienAudio.volume = startAlienVol * (1 - p);
-              } catch {}
+              } catch { }
               if (p < 1) requestAnimationFrame(fadeOut);
               else {
-                try { alienAudio.pause(); } catch {}
+                try { alienAudio.pause(); } catch { }
                 endToMain(overlay, travelAudio, blenderAudio, alienAudio);
               }
             })();
@@ -864,9 +1095,9 @@
 
 
         // ----- End: fade to black and return to main page -----
-        function endToMain(overlay, travelAudio, blenderAudio, alienAudio){
+        function endToMain(overlay, travelAudio, blenderAudio, alienAudio) {
           fadeToBlack(FINAL_BLACK_SEC, () => {
-            if (overlay){
+            if (overlay) {
               overlay.classList.remove('active');
               overlay.innerHTML = '';
             }
@@ -878,13 +1109,13 @@
             const videoBg = qs('#videoBg');
             const bgVideo = qs('#bg-video');
             if (videoBg) videoBg.style.opacity = '1';
-            if (bgVideo){
-              try { bgVideo.play(); } catch {}
+            if (bgVideo) {
+              try { bgVideo.play(); } catch { }
             }
 
             clearBlack();
 
-            if (window.mainMusic){
+            if (window.mainMusic) {
               window.mainMusic.volume = globalVolume;
               safePlayAudio(window.mainMusic);
             }
