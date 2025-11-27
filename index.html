@@ -206,7 +206,7 @@
         <button id="themeToggleBtn" class="btn" title="Theme change (T)">Theme change</button>
         <button id="mouseTrailToggleBtn" class="btn" title="Toggle mouse trail (M)">Mouse Trail</button>
         <div class="volume-wrapper">
-          <label for="volumeSlider"><span>Volume</span></label>
+          <span>Volume</span>
           <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="0.25" title="Adjust volume" />
         </div>
       </div>
@@ -375,7 +375,6 @@
 
       function tryPlayMainMusic(){
         mainMusic.play().catch(() => {
-          // hook first user gesture
           const resume = () => {
             mainMusic.play().catch(()=>{});
             document.removeEventListener('pointerdown', resume, true);
@@ -568,27 +567,35 @@
           try{ bgVideo.pause(); }catch{}
         }
 
-        // Pause main music while cinematic runs
         if(mainMusic){
           try{ mainMusic.pause(); }catch{}
         }
 
-        // Stage audios
-        const travelAudio = new Audio(AUDIO_TRAVEL);
+        // create audios as elements
+        const travelAudio = document.createElement('audio');
+        travelAudio.src = AUDIO_TRAVEL;
         travelAudio.loop = true;
+        travelAudio.preload = 'auto';
         registerAudio(travelAudio);
 
-        const blenderAudio = new Audio(AUDIO_BLENDER);
+        const blenderAudio = document.createElement('audio');
+        blenderAudio.src = AUDIO_BLENDER;
         blenderAudio.loop = false;
+        blenderAudio.preload = 'auto';
         registerAudio(blenderAudio);
 
-        const alienAudio = new Audio(AUDIO_ALIEN);
+        const alienAudio = document.createElement('audio');
+        alienAudio.src = AUDIO_ALIEN;
         alienAudio.loop = false;
+        alienAudio.preload = 'auto';
         registerAudio(alienAudio);
 
         applyVolume();
 
-        // Stage 1: Screensaver-1 + Travel audio
+        overlay.appendChild(travelAudio);
+        overlay.appendChild(blenderAudio);
+        overlay.appendChild(alienAudio);
+
         let v1, v2, v3;
         let stage2Started = false;
 
@@ -607,17 +614,22 @@
           vid.style.objectFit = 'cover';
           vid.style.opacity = '0';
           vid.style.transition = `opacity ${VIDEO_CROSSFADE_SEC}s linear`;
+          vid.setAttribute('disablePictureInPicture','true');
+          vid.setAttribute('controlslist','nodownload nofullscreen noremoteplayback');
           return vid;
         }
 
-        overlay.appendChild(travelAudio);
-        overlay.appendChild(blenderAudio);
-        overlay.appendChild(alienAudio);
-
-        travelAudio.play().catch(()=>{});
+        // ===== Stage 1: Screensaver-1 + Travel audio =====
         v1 = createVideo(STAGE1_VIDEO);
         overlay.appendChild(v1);
+
+        travelAudio.currentTime = 0;
+        travelAudio.play().catch(()=>{});
+
         v1.play().catch(()=>{});
+        v1.addEventListener('loadeddata', ()=>{
+          requestAnimationFrame(()=>{ v1.style.opacity = '1'; });
+        });
 
         v1.addEventListener('loadedmetadata', ()=>{
           const duration = v1.duration || 0;
@@ -632,12 +644,11 @@
           });
         });
 
-        requestAnimationFrame(()=>{ v1.style.opacity = '1'; });
-
         function startStage2(){
           if(stage2Started) return;
           stage2Started = true;
 
+          // ===== Stage 2: Screensaver-4 + Blender =====
           v2 = createVideo(STAGE2_VIDEO);
           overlay.appendChild(v2);
           v2.play().catch(()=>{});
@@ -651,9 +662,10 @@
             if(v1){ v1.remove(); v1=null; }
           }, VIDEO_CROSSFADE_SEC*1000 + 80);
 
-          // crossfade audio Travel -> Blender
+          // crossfade Travel -> Blender over ~1.2s
           const start = performance.now();
           const travelStartVol  = travelAudio.volume;
+
           blenderAudio.volume = 0;
           blenderAudio.currentTime = 0;
           blenderAudio.play().catch(()=>{});
@@ -667,49 +679,49 @@
             if(p < 1) requestAnimationFrame(step);
           })();
 
-          // When Blender audio ends: pause v2 and go to Stage 3
+          // when Blender ends, fade to black then Stage 3
           blenderAudio.addEventListener('ended', ()=>{
             try{ travelAudio.pause(); }catch{}
             if(v2){
               try{ v2.pause(); }catch{}
             }
-            startBlackToStage3();
+            fadeToBlackThenStage3();
           }, { once:true });
         }
 
-        function startBlackToStage3(){
-          const blackout = qs('#blackout');
+        function fadeToBlackThenStage3(){
           if(blackout){
             blackout.classList.add('show');
             requestAnimationFrame(()=> blackout.classList.add('visible'));
           }
-
           setTimeout(()=>{
-            // clear current overlay content except overlay itself
             overlay.innerHTML = '';
-            startStage3(overlay, blackout, alienAudio, bgVideo, videoBg);
-          }, BLACK_HOLD_SEC * 1000);
+            startStage3(overlay, blackout, alienAudio, bgVideo, videoBg, travelAudio, blenderAudio);
+          }, BLACK_HOLD_SEC*1000);
         }
 
-        function startStage3(overlay, blackout, alienAudio, bgVideo, videoBg){
-          // Stage 3: Screensaver-5 + Alien beach waves (60s)
+        function startStage3(overlay, blackout, alienAudio, bgVideo, videoBg, travelAudio, blenderAudio){
           overlay.classList.add('active');
 
           v3 = createVideo(STAGE3_VIDEO);
-          v3.muted = true;
+          // For Stage 3, we want a faster fade-in
+          v3.style.transition = 'opacity 0.8s linear';
           overlay.appendChild(v3);
           v3.play().catch(()=>{});
 
-          // *** make sure Screensaver-5 is visible ***
-          requestAnimationFrame(()=>{ v3.style.opacity = '1'; });
+          v3.addEventListener('loadeddata', ()=>{
+            requestAnimationFrame(()=>{ v3.style.opacity = '1'; });
+          });
 
-          overlay.appendChild(alienAudio);
-
-          // fade from black
+          // remove black
           if(blackout){
             blackout.classList.remove('visible');
             setTimeout(()=> blackout.classList.remove('show'), 900);
           }
+
+          // stop previous audios if still going
+          try{ travelAudio.pause(); }catch{}
+          try{ blenderAudio.pause(); }catch{}
 
           // fade in alien audio
           alienAudio.volume = 0;
@@ -717,36 +729,35 @@
           alienAudio.play().catch(()=>{});
           const fadeInStart = performance.now();
           (function fadeIn(){
-            const p = Math.min(1, (performance.now() - fadeInStart)/ALIEN_FADE_MS);
+            const p = Math.min(1,(performance.now()-fadeInStart)/ALIEN_FADE_MS);
             alienAudio.volume = globalVolume * p;
             if(p < 1) requestAnimationFrame(fadeIn);
           })();
 
-          // After ALIEN_PLAY_MS, fade out and finish
+          // after ALIEN_PLAY_MS, fade out and end
           setTimeout(()=>{
             const fadeOutStart = performance.now();
             const startVol = alienAudio.volume;
             (function fadeOut(){
-              const p = Math.min(1, (performance.now() - fadeOutStart)/ALIEN_FADE_MS);
+              const p = Math.min(1,(performance.now()-fadeOutStart)/ALIEN_FADE_MS);
               alienAudio.volume = startVol * (1-p);
               if(p < 1) requestAnimationFrame(fadeOut);
               else{
                 try{ alienAudio.pause(); }catch{}
-                endToMain(overlay, bgVideo, videoBg);
+                endToMain(overlay, bgVideo, videoBg, blackout, travelAudio, blenderAudio, alienAudio, v3);
               }
             })();
           }, ALIEN_PLAY_MS);
         }
 
-        function endToMain(overlay, bgVideo, videoBg){
-          const blackout = qs('#blackout');
+        function endToMain(overlay, bgVideo, videoBg, blackout, travelAudio, blenderAudio, alienAudio, v3){
           if(blackout){
             blackout.classList.add('show');
             requestAnimationFrame(()=> blackout.classList.add('visible'));
           }
 
           setTimeout(()=>{
-            // Clean up overlay and audios
+            // cleanup
             try{ travelAudio.pause(); }catch{}
             try{ blenderAudio.pause(); }catch{}
             try{ alienAudio.pause(); }catch{}
@@ -768,7 +779,7 @@
               setTimeout(()=> blackout.classList.remove('show'), BLACK_HOLD_SEC*1000);
             }
 
-            // Resume main music respecting current volume
+            // resume main music
             if(mainMusic){
               mainMusic.volume = globalVolume;
               mainMusic.play().catch(()=>{});
