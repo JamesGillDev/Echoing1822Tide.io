@@ -1,1185 +1,158 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>EchoingTide1822 - James Gill</title>
-
-  <style>
-    :root {
-      --panel-bg: rgba(10, 10, 30, 0.55);
-      --accent-cyan: #00ffff;
-      --accent-magenta: #ff00ff;
-      --text-color: #e6e9ff;
-      --muted: #97a0ff;
-      --panel-blur: 8px;
-      --bg-color: #000;
-
-      /* Scroll-dynamics variables (set by JS) */
-      --expand: 0;       /* 0..1 */
-      --maxw: 1100px;    /* grows/shrinks on scroll */
-    }
-
-    [data-theme="ocean"] {
-      --panel-bg: rgba(0, 30, 50, 0.65);
-      --accent-cyan: #00d4ff;
-      --accent-magenta: #0088ff;
-      --text-color: #d0f0ff;
-      --muted: #7ac5ff;
-      --bg-color: #001a2e;
-    }
-
-    [data-theme="forest"] {
-      --panel-bg: rgba(10, 35, 15, 0.65);
-      --accent-cyan: #00ff88;
-      --accent-magenta: #88ff00;
-      --text-color: #d8ffe8;
-      --muted: #7dff99;
-      --bg-color: #0a1f0a;
-    }
-
-    [data-theme="sunset"] {
-      --panel-bg: rgba(50, 20, 10, 0.65);
-      --accent-cyan: #ff8800;
-      --accent-magenta: #ff0066;
-      --text-color: #ffe8d0;
-      --muted: #ffaa77;
-      --bg-color: #1a0f00;
-    }
-
-    [data-theme="purple"] {
-      --panel-bg: rgba(40, 10, 50, 0.65);
-      --accent-cyan: #cc00ff;
-      --accent-magenta: #ff00cc;
-      --text-color: #f0d0ff;
-      --muted: #d088ff;
-      --bg-color: #1a001a;
-    }
-
-    [data-theme="neon"] {
-      --panel-bg: rgba(10, 10, 30, 0.55);
-      --accent-cyan: #00ffff;
-      --accent-magenta: #ff00ff;
-      --text-color: #e6e9ff;
-      --muted: #97a0ff;
-      --bg-color: #000;
-    }
-
-    /* === Enhanced Theme Variants (dramatic changes) === */
-    body.theme-a {
-      --accent-cyan: #00ffe0;
-      --accent-magenta: #ff5ae6;
-      --panel-bg: rgba(5, 15, 40, .65);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-    }
-
-    body.theme-b {
-      --accent-cyan: #ffca00;
-      --accent-magenta: #ff5a00;
-      --panel-bg: rgba(50, 25, 0, .55);
-      font-family: 'Georgia', serif;
-    }
-
-    body.theme-c {
-      --accent-cyan: #67ff00;
-      --accent-magenta: #00ff95;
-      --panel-bg: rgba(10, 50, 10, .55);
-      font-family: 'Courier New', monospace;
-    }
-
-    body.theme-d {
-      --accent-cyan: #bb66ff;
-      --accent-magenta: #ff33aa;
-      --panel-bg: rgba(35, 10, 50, .55);
-      font-family: 'Trebuchet MS', sans-serif;
-    }
-
-    body.theme-e {
-      --accent-cyan: #33d1ff;
-      --accent-magenta: #ff3377;
-      --panel-bg: rgba(0, 0, 0, .55);
-      font-family: 'Verdana', sans-serif;
-    }
-
-    body.theme-a .btn { border-radius: 40px; font-size: .95rem }
-    body.theme-b .btn { border-radius: 8px; font-weight: 700; font-size: 1rem; letter-spacing: .5px }
-    body.theme-c .btn { border-radius: 0; font-size: .9rem; border: 2px solid var(--accent-cyan) }
-    body.theme-d .btn { border-radius: 20px 4px 20px 4px; font-size: 1.05rem }
-    body.theme-e .btn { border-radius: 999px; font-size: .95rem; box-shadow: 0 0 0 2px rgba(255, 255, 255, .08) }
-
-    body.theme-c .panel { border-radius: 0 }
-    body.theme-b .panel { border: 2px solid rgba(255, 255, 255, .15) }
-    body.theme-d .panel { border-radius: 24px }
-    body.theme-a .panel { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px) }
-    body.theme-e .panel { outline: 1px solid rgba(255, 255, 255, .12) }
-
-    * { box-sizing: border-box; margin: 0; padding: 0 }
-
-    html, body {
-      height: 100%;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-      background: var(--bg-color);
-      color: var(--text-color);
-      transition: background-color 0.6s ease;
-    }
-
-    body { display: flex; flex-direction: column; }
-
-    /* ===== Image Background System ===== */
-    .image-background {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      overflow: hidden;
-      background: var(--bg-color);
-      transition: opacity .6s ease;
-    }
-
-    .bg-layer {
-      position: absolute;
-      inset: 0;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      will-change: opacity, transform;
-      opacity: 0;
-      transform: scale(1.01);
-      transition: opacity 900ms ease, transform 1400ms ease;
-    }
-
-    .bg-layer.show {
-      opacity: 1;
-      transform: scale(1.00);
-    }
-
-    /* White flash between images (behind content, above background) */
-    #whiteFlash {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
-      background: #fff;
-      opacity: 0;
-      transition: opacity 160ms linear;
-      display: none;
-    }
-    #whiteFlash.show { display: block; }
-    #whiteFlash.visible { opacity: 1; }
-
-    .retro-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      background-image:
-        linear-gradient(transparent 60%, rgba(0, 0, 0, 0.12) 100%),
-        radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.03), transparent 20%);
-      mix-blend-mode: overlay;
-    }
-
-    /* Blackout overlay for fades */
-    #blackout {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      z-index: 9000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .8s ease;
-      display: none;
-    }
-    #blackout.show { display: block }
-    #blackout.visible { opacity: 1 }
-
-    main.container {
-      position: relative;
-      z-index: 3;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      align-items: center;
-      padding: 3.5rem 1rem;
-    }
-
-    footer {
-      position: relative;
-      z-index: 3;
-      padding: 0.75rem 1rem 1rem;
-      color: rgba(151, 160, 255, 0.85);
-      font-size: .9rem;
-      text-align: center;
-    }
-
-    /* High-contrast top bar */
-    .topbar {
-      width: min(var(--maxw), 100%);
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-      border-radius: 14px;
-      padding: 1rem 1rem 1.1rem;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-
-      transform: translateY(calc(var(--expand) * -10px));
-      transition: transform 80ms linear;
-    }
-
-    h1 {
-      font-size: clamp(1.4rem, 2.6vw, 2.2rem);
-      text-align: center;
-      margin-bottom: .25rem;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, .65);
-    }
-
-    .subhead {
-      text-align: center;
-      color: rgba(151, 160, 255, 0.95);
-      font-size: 0.98rem;
-      margin-bottom: .75rem;
-      line-height: 1.25;
-    }
-    .subhead em { font-style: italic; opacity: 0.95; }
-
-    .controls {
-      display: flex;
-      gap: .6rem;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: .5rem;
-      background: rgba(0, 0, 0, 0.55);
-      color: var(--text-color);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      padding: .6rem 1rem;
-      border-radius: 999px;
-      cursor: pointer;
-      transition: transform .18s, box-shadow .18s, background .2s;
-      font-weight: 600;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, .55);
-      background: rgba(0, 0, 0, 0.7);
-    }
-
-    .linkedin-btn {
-      background: linear-gradient(90deg, #0077b5, #00a0dc);
-      color: #fff;
-      border: none;
-      padding: .6rem 1rem;
-    }
-
-    .volume-wrapper {
-      display: flex;
-      align-items: center;
-      gap: .4rem;
-      font-size: .85rem;
-      color: var(--muted);
-    }
-
-    .volume-wrapper input[type="range"] {
-      width: 110px;
-      cursor: pointer;
-    }
-
-    .panels {
-      width: min(var(--maxw), 100%);
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: calc(1rem + (var(--expand) * 0.6rem));
-      margin: 0 auto;
-      transition: gap 80ms linear;
-    }
-
-    .panel {
-      background: var(--panel-bg);
-      border-radius: 12px;
-      padding: 1rem;
-      box-shadow: 0 8px 30px rgba(16, 14, 28, 0.6);
-      -webkit-backdrop-filter: blur(var(--panel-blur));
-      backdrop-filter: blur(var(--panel-blur));
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: transform .22s, box-shadow .22s, background-color 0.4s ease, opacity 260ms ease;
-      min-height: 90px;
-      position: relative;
-      cursor: pointer;
-
-      transform: translateY(14px) scale(0.985);
-      opacity: 0.88;
-    }
-
-    .panel.in-view {
-      transform: translateY(0) scale(1);
-      opacity: 1;
-    }
-
-    .panel:hover {
-      transform: translateY(-3px) scale(1);
-      box-shadow: 0 12px 40px rgba(16, 14, 28, 0.8);
-    }
-
-    .panel[aria-expanded="true"] { transform: translateY(-6px) scale(1) }
-
-    .panel h3 {
-      color: var(--muted);
-      font-size: 1rem;
-      margin-bottom: .4rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: .5rem;
-      pointer-events: none;
-    }
-
-    .panel .body {
-      color: var(--text-color);
-      line-height: 1.45;
-      margin-top: 0.5rem;
-    }
-
-    .panel .body ul { padding-left: 1.1rem }
-    .panel .body li { margin: .25rem 0 }
-    .panel .body h4 {
-      margin: .6rem 0 .25rem;
-      color: var(--accent-cyan);
-      font-size: 1rem;
-    }
-
-    /* Hidden celebrate button */
-    #hiddenCelebrate {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      z-index: 9999;
-      opacity: 0;
-    }
-    #hiddenCelebrate:hover { opacity: 0.1 }
-
-    /* Warp overlay */
-    .warp-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 10000;
-      pointer-events: none;
-      display: none;
-      overflow: hidden;
-      background: #000;
-    }
-    .warp-overlay.active { display: block; }
-
-    .warp-overlay video.warp-player {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* cursor trail */
-    .cursor-core {
-      position: fixed;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: radial-gradient(circle, var(--accent-cyan), var(--accent-magenta));
-      pointer-events: none;
-      z-index: 9999;
-      mix-blend-mode: screen;
-      transform: translate(-50%, -50%);
-      opacity: .95;
-      transition: transform .06s linear;
-      box-shadow: 0 0 20px var(--accent-cyan), 0 0 40px var(--accent-magenta);
-      display: none;
-    }
-
-    .cursor-trail-dot {
-      position: fixed;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 9998;
-      mix-blend-mode: screen;
-      transition: transform .08s linear, opacity .2s linear;
-    }
-
-    @media(max-width:520px) {
-      main.container { padding: 2rem 1rem }
-      .topbar { padding: .9rem }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .topbar, .panels, .panel, .bg-layer { transition: none !important; }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Career Lifeline – James Gill</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body data-theme="neon">
-  <!-- Background music -->
-  <!-- MUST be in the repo. Space is encoded as %20 -->
-  <audio id="main-music" src="I,%20am...me.mp3" loop></audio>
+<body class="theme-dark">
+  <!-- Fixed, immobile background layer -->
+  <div id="bg">
+    <div id="bgFlash" aria-hidden="true"></div>
 
-  <!-- Background Images -->
-  <div class="image-background" aria-hidden="true" id="videoBg">
-    <div id="bgA" class="bg-layer"></div>
-    <div id="bgB" class="bg-layer"></div>
+    <!-- Background images (crossfade) -->
+    <img class="bg-img is-visible" src="assets/img/airforce.png" alt="" aria-hidden="true" />
+    <img class="bg-img" src="assets/img/caddets_1.png" alt="" aria-hidden="true" />
+    <img class="bg-img" src="assets/img/caddets_2.png" alt="" aria-hidden="true" />
+    <img class="bg-img" src="assets/img/tech.png" alt="" aria-hidden="true" />
+
+    <!-- subtle dark overlay for readability -->
+    <div class="bg-vignette" aria-hidden="true"></div>
   </div>
 
-  <div class="retro-overlay" aria-hidden="true"></div>
-  <div id="whiteFlash" aria-hidden="true"></div>
+  <!-- Background music (NOTE: browsers require a user gesture before audio can play) -->
+  <audio id="bgAudio" preload="auto" loop
+    src="I,%20am...me.mp3">
+  </audio>
 
-  <div class="warp-overlay" id="warpOverlay"></div>
-  <div id="blackout"></div>
-
-  <main class="container">
-    <div class="topbar">
+  <header class="hero">
+    <div class="hero-inner">
       <h1>Career Lifeline – James Gill</h1>
-      <p class="subhead"><em>Empowering tech to serve the mission. From Mission-ops to DevOps.</em></p>
 
-      <div class="controls" role="toolbar" aria-label="Page controls">
-        <a class="btn linkedin-btn" href="https://www.linkedin.com/in/james-e-gill" target="_blank"
-          rel="noopener noreferrer">Connect on LinkedIn</a>
+      <!-- Your italic subhead (this belongs in BODY, not inside <head>) -->
+      <p class="tagline"><em>Empowering tech to serve the mission. From Mission-ops to DevOps.</em></p>
 
-        <button id="themeToggleBtn" class="btn" title="Theme change (T)">Theme change</button>
-        <button id="mouseTrailToggleBtn" class="btn" title="Toggle mouse trail (M)">Mouse Trail</button>
+      <div class="controls">
+        <a class="btn primary" href="https://www.linkedin.com" target="_blank" rel="noopener">
+          Connect on LinkedIn
+        </a>
 
-        <div class="volume-wrapper">
-          <span>Volume</span>
+        <button class="btn" id="themeBtn" type="button">Theme change</button>
+        <button class="btn" id="trailBtn" type="button">Mouse Trail</button>
+
+        <div class="volume">
+          <label for="volumeSlider">Volume</label>
           <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="0.25" title="Adjust volume" />
         </div>
+
+        <button class="btn" id="audioBtn" type="button">Play</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Scrolly section: sticky stage + invisible scroll "steps" -->
+  <main class="scrolly">
+    <div class="pin">
+      <div class="stage" role="region" aria-label="Career lifeline scrolly cards">
+
+        <!-- Card 1 -->
+        <article class="card active" data-card="0">
+          <div class="card-head">
+            <h2>Job Title</h2>
+            <button class="expand" type="button" aria-expanded="false">Expand</button>
+          </div>
+          <div class="card-body">
+            <p class="preview">Your current/next title goes here.</p>
+            <div class="details" hidden>
+              <p><strong>Example:</strong> Cloud Application Developer (in training), transitioning from USAF Electrical Power Production.</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 2 -->
+        <article class="card" data-card="1">
+          <div class="card-head">
+            <h2>Age</h2>
+            <button class="expand" type="button" aria-expanded="false">Expand</button>
+          </div>
+          <div class="card-body">
+            <p class="preview">Your current age + timeline markers.</p>
+            <div class="details" hidden>
+              <p><strong>Example:</strong> 38 — building toward MSSA completion and first tech role.</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 3 -->
+        <article class="card" data-card="2">
+          <div class="card-head">
+            <h2>Likes</h2>
+            <button class="expand" type="button" aria-expanded="false">Expand</button>
+          </div>
+          <div class="card-body">
+            <p class="preview">What you lean toward (work + life).</p>
+            <div class="details" hidden>
+              <ul>
+                <li>Building reliable systems</li>
+                <li>Clear requirements</li>
+                <li>Learning and iterating</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 4 -->
+        <article class="card" data-card="3">
+          <div class="card-head">
+            <h2>Dislikes</h2>
+            <button class="expand" type="button" aria-expanded="false">Expand</button>
+          </div>
+          <div class="card-body">
+            <p class="preview">Friction points and non-negotiables.</p>
+            <div class="details" hidden>
+              <ul>
+                <li>Vague scope / moving goalposts</li>
+                <li>Sloppy process in high-risk work</li>
+                <li>Noise-for-no-reason</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 5 -->
+        <article class="card" data-card="4">
+          <div class="card-head">
+            <h2>Transferable Skills</h2>
+            <button class="expand" type="button" aria-expanded="false">Expand</button>
+          </div>
+          <div class="card-body">
+            <p class="preview">Your “military → tech” bridge.</p>
+            <div class="details" hidden>
+              <ul>
+                <li>Leadership under pressure</li>
+                <li>Risk management / QA mindset</li>
+                <li>Systems thinking</li>
+                <li>Training & facilitation</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
       </div>
     </div>
 
-    <section class="panels" id="panels" aria-live="polite">
-      <article class="panel" data-index="0" aria-expanded="false" tabindex="0">
-        <h3><span>1. Job Title</span></h3>
-        <div class="body" hidden>
-          <p>
-            Electrical Power Production Craftsman →
-            Power Production Supervisor →
-            Contingency Training Supervisor →
-            Team Lead / SME (BEAR, TFS, WRM, AMMPS) →
-            Software Developer-in-Training (MSSA Cloud Application Development)
-          </p>
-        </div>
-      </article>
+    <!-- Scroll “steps” (no visible numbers; they just drive which card is active) -->
+    <section class="step" data-step="0" aria-label="Job Title"></section>
+    <section class="step" data-step="1" aria-label="Age"></section>
+    <section class="step" data-step="2" aria-label="Likes"></section>
+    <section class="step" data-step="3" aria-label="Dislikes"></section>
+    <section class="step" data-step="4" aria-label="Transferable Skills"></section>
 
-      <article class="panel" data-index="1" aria-expanded="false" tabindex="0">
-        <h3><span>2. Age</span></h3>
-        <div class="body" hidden>
-          <ul>
-            <li>18–20: Trainee, Apprentice Power Production</li>
-            <li>21–25: Journeyman, Iraq/Afghanistan deployments, crisis operations</li>
-            <li>26–30: Senior Craftsman, program builder, inspection reform</li>
-            <li>31–35: NCOIC roles, global deployments, instructor-level performance</li>
-            <li>36–38: Senior NCO, Workforce leader, Equipment Custodian for $258M assets</li>
-            <li>38: Software Development student (C#, Azure, GitHub), MSSA Cohort CCAD21</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="panel" data-index="2" aria-expanded="false" tabindex="0">
-        <h3><span>3. Likes</span></h3>
-        <div class="body" hidden>
-          <ul>
-            <li>Building systems — generators, logistics programs, and now software.</li>
-            <li>Solving problems under pressure — rockets, mortars, broken systems, bureaucracy.</li>
-            <li>Teaching and mentoring — hundreds trained, supervisors coached, teams elevated.</li>
-            <li>Structure with freedom — clear mission, with room to improve the process.</li>
-            <li>Technology — PC building, AMMPS, C#, Visual Studio, GitHub, cloud apps.</li>
-            <li>Meaningful work — missions that protect people or improve lives.</li>
-            <li>Innovation — inspection toolsets, tracking systems, training programs.</li>
-            <li>Calm environments — desert nights, storms, ocean waves, wide open spaces.</li>
-            <li>Perseverance — thriving in challenges that require grit.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="panel" data-index="3" aria-expanded="false" tabindex="0">
-        <h3><span>4. Dislikes</span></h3>
-        <div class="body" hidden>
-          <ul>
-            <li>Micromanagement — prefer trust, mission clarity, and autonomy.</li>
-            <li>Broken systems with no intent to fix them — always improve what you touch.</li>
-            <li>Pretension and arrogance — value humility and genuine leadership.</li>
-            <li>Stagnation — need growth, movement, and learning.</li>
-            <li>Toxic leadership — punishing instead of developing people.</li>
-            <li>Inefficiency and sloppy processes — a zero-tolerance streak.</li>
-            <li>Light pollution, noisy crowds, claustrophobic environments — prefer open horizons.</li>
-            <li>Disloyalty and dishonesty — self-explanatory.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="panel" data-index="4" aria-expanded="false" tabindex="0">
-        <h3><span>5. Transferable Skills</span></h3>
-        <div class="body" hidden>
-          <h4>Leadership & People Development</h4>
-          <ul>
-            <li>Led 3–55 personnel across multiple missions and deployments.</li>
-            <li>Lead Trainer — trained 800+ supervisors/managers on leadership, performance, and compliance.</li>
-            <li>Mentored dozens of Airmen, accelerating upgrade training by months.</li>
-            <li>Taught complex tasks under pressure (MAAS, BEAR Program, TFS systems, generator systems).</li>
-          </ul>
-
-          <h4>Systems Thinking & Process Design</h4>
-          <ul>
-            <li>Built a 2,022-line inspection system used across 12 programs.</li>
-            <li>Created tracking databases and standardization toolsets.</li>
-            <li>Identified inefficiencies and resolved multi-year backlogs.</li>
-            <li>Designed operational checklists, packing plans, and workflow improvements.</li>
-          </ul>
-
-          <h4>Technical Problem Solving</h4>
-          <ul>
-            <li>Diagnosed and repaired high-value power systems (5kW–12.7kW).</li>
-            <li>Managed $258M in global equipment, 428 UTCs, 12.5K O&M tasks.</li>
-            <li>Executed global deployments supporting 11–16 CCMDs.</li>
-            <li>Troubleshot AMMPS, generators, high-voltage, TFS, MAAS, and LAMS.</li>
-            <li>BIOS/OS troubleshooting, PC rebuilds, electrical + mechanical foundation.</li>
-          </ul>
-
-          <h4>Operational & Project Management</h4>
-          <ul>
-            <li>Oversaw $4.6M in projects and contracts across 55 locations.</li>
-            <li>Led airfield recovery operations protecting $1.2B in fighter aircraft.</li>
-            <li>Managed logistics for 6–24 UTC deployments under urgent deadlines.</li>
-            <li>Coordinated joint operations with Army, Marines, NATO, and international partners.</li>
-          </ul>
-
-          <h4>Instruction, Communication, UX Mindset</h4>
-          <ul>
-            <li>Built structured, user-focused systems to simplify compliance and operations.</li>
-            <li>Designed training modules — clear, repeatable, “user-friendly” (early UX talent).</li>
-            <li>Communicated across ranks and cultures, bridging technical and human needs.</li>
-          </ul>
-
-          <h4>Software & Cloud Foundations (MSSA + Microsoft Learn)</h4>
-          <ul>
-            <li>Completed 6 Learning Paths, 38 Modules, 33+ hours of Microsoft C# training.</li>
-            <li>Passed all module assessments with full mastery.</li>
-            <li>Earned Foundational C# Developer Certification (Microsoft + FreeCodeCamp).</li>
-            <li>Built working console applications; debugged systems; implemented logic, arrays, exceptions.</li>
-            <li>Actively developing cloud development skills (C#, .NET, GitHub, Azure).</li>
-          </ul>
-
-          <h4>Mindset</h4>
-          <ul>
-            <li>Resilient — operated under rockets, mortars, combat conditions.</li>
-            <li>Mission-driven — shows up every time, no excuses.</li>
-            <li>Fast learner — BA, C#, MSSA prerequisites, deployed duties.</li>
-            <li>Systems builder — not just fixing problems; redesigning the blueprint.</li>
-          </ul>
-        </div>
-      </article>
-    </section>
+    <footer class="footer">© 2026 EchoingTide1822 - James Gill</footer>
   </main>
 
-  <footer>© 2025 EchoingTide1822 - James Gill</footer>
-
-  <button id="hiddenCelebrate" aria-label="Secret celebration"></button>
-  <div id="cursorCore" class="cursor-core" aria-hidden="true"></div>
-
-  <script>
-    // ===== Helpers & shared audio state =====
-    const qs = sel => document.querySelector(sel);
-
-    let globalVolume = 0.25; // start at 25%
-    const audioSet = new Set();
-
-    function registerAudio(a) {
-      if (!a) return;
-      audioSet.add(a);
-      try { a.volume = globalVolume; } catch { }
-    }
-
-    function unregisterAudio(a) {
-      if (!a) return;
-      audioSet.delete(a);
-    }
-
-    function applyVolume() {
-      audioSet.forEach(a => {
-        try { a.volume = globalVolume; } catch { }
-      });
-    }
-
-    function safePlayAudio(a) {
-      if (!a) return;
-      a.play().catch(() => {
-        const resume = () => {
-          a.play().catch(() => { });
-          document.removeEventListener('pointerdown', resume, true);
-          document.removeEventListener('keydown', resume, true);
-        };
-        document.addEventListener('pointerdown', resume, true);
-        document.addEventListener('keydown', resume, true);
-      });
-    }
-
-    // ===== Main background music =====
-    const mainMusic = document.getElementById('main-music');
-    if (mainMusic) {
-      mainMusic.loop = true;
-      registerAudio(mainMusic);
-      window.mainMusic = mainMusic;
-
-      function tryPlayMainMusic() { safePlayAudio(mainMusic); }
-      document.addEventListener('DOMContentLoaded', tryPlayMainMusic);
-    }
-
-    // ===== Volume slider =====
-    (function volumeInit() {
-      const slider = document.getElementById('volumeSlider');
-      if (!slider) return;
-
-      slider.addEventListener('input', () => {
-        globalVolume = parseFloat(slider.value) || 0;
-        applyVolume();
-      });
-
-      applyVolume(); // initial 25%
-    })();
-
-    // ===== Panels (expand/collapse) =====
-    document.addEventListener('DOMContentLoaded', () => {
-      const panels = Array.from(document.querySelectorAll('.panel'));
-
-      function closeAll() {
-        panels.forEach(p => {
-          const body = p.querySelector('.body');
-          p.setAttribute('aria-expanded', 'false');
-          if (body) body.hidden = true;
-        });
-      }
-
-      function togglePanel(panel) {
-        const isExpanded = panel.getAttribute('aria-expanded') === 'true';
-        const body = panel.querySelector('.body');
-        closeAll();
-        if (!isExpanded && body) {
-          panel.setAttribute('aria-expanded', 'true');
-          body.hidden = false;
-        }
-      }
-
-      panels.forEach(panel => {
-        const body = panel.querySelector('.body');
-        if (body) body.hidden = true;
-
-        panel.addEventListener('click', () => togglePanel(panel));
-        panel.addEventListener('keydown', e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            togglePanel(panel);
-          }
-        });
-      });
-    });
-
-    // ===== Theme cycle =====
-    (function themeCycleInit() {
-      const btn = document.getElementById('themeToggleBtn');
-      if (!btn) return;
-
-      const classes = ['theme-a', 'theme-b', 'theme-c', 'theme-d', 'theme-e'];
-      let idx = 0;
-
-      function apply() {
-        document.body.classList.remove(...classes);
-        document.body.classList.add(classes[idx]);
-      }
-
-      function next() {
-        idx = (idx + 1) % classes.length;
-        apply();
-        document.body.animate(
-          [
-            { filter: 'brightness(3)' },
-            { filter: 'brightness(1.25)' },
-            { filter: 'brightness(3)' },
-            { filter: 'brightness(1)' }
-          ],
-          { duration: 600, easing: 'cubic-bezier(0.5,0,0.5,1)', fill: 'forwards' }
-        );
-      }
-
-      apply();
-      btn.addEventListener('click', next);
-      document.addEventListener('keydown', e => {
-        if ((e.key || '').toLowerCase() === 't') next();
-      });
-    })();
-
-    // ===== Mouse trail =====
-    (function mouseTrailInit() {
-      const core = document.getElementById('cursorCore');
-      const toggleBtn = document.getElementById('mouseTrailToggleBtn');
-      if (!core || !toggleBtn) return;
-
-      let enabled = false;
-      let trailDots = [];
-
-      function enableTrail() {
-        enabled = true;
-        core.style.display = 'block';
-      }
-
-      function disableTrail() {
-        enabled = false;
-        core.style.display = 'none';
-        trailDots.forEach(dot => dot.remove());
-        trailDots = [];
-      }
-
-      toggleBtn.addEventListener('click', () => {
-        enabled ? disableTrail() : enableTrail();
-      });
-
-      document.addEventListener('keydown', e => {
-        if ((e.key || '').toLowerCase() === 'm') {
-          enabled ? disableTrail() : enableTrail();
-        }
-      });
-
-      document.addEventListener('mousemove', e => {
-        if (!enabled) return;
-        core.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
-
-        const dot = document.createElement('div');
-        dot.className = 'cursor-trail-dot';
-        dot.style.width = '8px';
-        dot.style.height = '8px';
-        dot.style.background = 'radial-gradient(circle, var(--accent-cyan), transparent)';
-        dot.style.left = e.clientX + 'px';
-        dot.style.top = e.clientY + 'px';
-        dot.style.opacity = '0.9';
-        document.body.appendChild(dot);
-        trailDots.push(dot);
-
-        requestAnimationFrame(() => {
-          dot.style.transform = 'translateY(8px)';
-          dot.style.opacity = '0';
-        });
-
-        setTimeout(() => {
-          dot.remove();
-          trailDots = trailDots.filter(d => d !== dot);
-        }, 350);
-      });
-    })();
-
-    // ===== Scroll-driven “page expansion” + in-view animation =====
-    (function scrollDynamicsInit() {
-      const root = document.documentElement;
-
-      let ticking = false;
-      function clamp01(n) { return Math.max(0, Math.min(1, n)); }
-
-      function update() {
-        ticking = false;
-        const y = window.scrollY || 0;
-
-        const start = 0;
-        const end = 520;
-
-        const p = clamp01((y - start) / (end - start));
-        root.style.setProperty('--expand', p.toFixed(4));
-
-        const maxw = Math.round(960 + (p * 140));
-        root.style.setProperty('--maxw', `${maxw}px`);
-      }
-
-      window.addEventListener('scroll', () => {
-        if (!ticking) {
-          ticking = true;
-          requestAnimationFrame(update);
-        }
-      }, { passive: true });
-
-      update();
-
-      const panels = document.querySelectorAll('.panel');
-      if (!panels.length) return;
-
-      const io = new IntersectionObserver((entries) => {
-        for (const e of entries) {
-          e.target.classList.toggle('in-view', e.isIntersecting);
-        }
-      }, { threshold: 0.25 });
-
-      panels.forEach(p => io.observe(p));
-    })();
-
-    // ===== White Flash helper =====
-    function flashWhite(durationMs = 220) {
-      const flash = qs('#whiteFlash');
-      if (!flash) return Promise.resolve();
-
-      flash.classList.add('show');
-      requestAnimationFrame(() => flash.classList.add('visible'));
-
-      return new Promise(res => {
-        setTimeout(() => {
-          flash.classList.remove('visible');
-          setTimeout(() => {
-            flash.classList.remove('show');
-            res();
-          }, 180);
-        }, durationMs);
-      });
-    }
-
-    // ===== Background Image Cinematic (NO DaVinci needed) =====
-    (function backgroundImageCinematicInit() {
-      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-      // CHANGE THESE FILENAMES if yours are different
-      const BG_IMAGES = [
-        'AirForce_Emblem.png',   // 1) Air Force
-        'CADdets_1.png',         // 2) MSSA CADdets (clean)
-        'CADdets_Retro.png',     // 3) MSSA CADdets (retro)
-        'Tech_Career.png'        // 4) Post-MSSA Tech Career (FINAL STATIC)
-      ];
-      // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-      const layerA = qs('#bgA');
-      const layerB = qs('#bgB');
-      if (!layerA || !layerB) return;
-
-      // Sequence: 1→2→3→1→2→3→4 then STOP on 4
-      const sequence = [0, 1, 2, 0, 1, 2, 3];
-
-      // Timing knobs (edit these if you want faster/slower)
-      const HOLD_MS = 2600;          // time each image stays visible
-      const BETWEEN_MS = 650;        // time between flash + crossfade steps
-
-      let showingA = true;
-      let currentIndex = 0;
-      let stopped = false;
-
-      // Preload
-      BG_IMAGES.forEach(src => { const img = new Image(); img.src = src; });
-
-      function setLayerImage(layer, src) {
-        layer.style.backgroundImage = `url("${src}")`;
-      }
-
-      function showLayer(layerToShow, layerToHide) {
-        layerToHide.classList.remove('show');
-        requestAnimationFrame(() => layerToShow.classList.add('show'));
-      }
-
-      async function transitionTo(imageSrc) {
-        if (stopped) return;
-
-        // quick white flash (behind content)
-        await flashWhite(200);
-
-        // swap hidden layer to new image, then crossfade
-        const show = showingA ? layerB : layerA;
-        const hide = showingA ? layerA : layerB;
-
-        setLayerImage(show, imageSrc);
-        // small delay so browser applies the new background before fade
-        await new Promise(r => setTimeout(r, 40));
-
-        showLayer(show, hide);
-        showingA = !showingA;
-
-        await new Promise(r => setTimeout(r, BETWEEN_MS));
-      }
-
-      async function runSequence() {
-        // If reduced motion, skip straight to final static image
-        if (prefersReduced) {
-          setLayerImage(layerA, BG_IMAGES[3]);
-          layerA.classList.add('show');
-          layerB.classList.remove('show');
-          return;
-        }
-
-        // Start on first image immediately
-        setLayerImage(layerA, BG_IMAGES[sequence[0]]);
-        layerA.classList.add('show');
-        layerB.classList.remove('show');
-
-        for (let i = 1; i < sequence.length; i++) {
-          await new Promise(r => setTimeout(r, HOLD_MS));
-          await transitionTo(BG_IMAGES[sequence[i]]);
-        }
-
-        // lock final static image
-        stopped = true;
-      }
-
-      document.addEventListener('DOMContentLoaded', runSequence);
-    })();
-
-    // ===== Fade helpers (for warp cinematic) =====
-    function fadeToBlack(sec, cb) {
-      const blackout = qs('#blackout');
-      if (!blackout) { cb && cb(); return; }
-      blackout.classList.add('show');
-      requestAnimationFrame(() => blackout.classList.add('visible'));
-      setTimeout(() => { cb && cb(); }, sec * 1000);
-    }
-
-    function clearBlack() {
-      const blackout = qs('#blackout');
-      if (!blackout) return;
-      blackout.classList.remove('visible');
-      setTimeout(() => blackout.classList.remove('show'), 800);
-    }
-
-    // ===== Hidden button cinematic: S1 → S4 → S5 =====
-    (function cinematicInit() {
-      const hiddenBtn = document.getElementById('hiddenCelebrate');
-      if (!hiddenBtn) return;
-
-      let isCinematic = false;
-
-      const STAGE1_VIDEO = 'Screensaver-1.mp4';
-      const STAGE2_VIDEO = 'Screensaver-4.mp4';
-      const STAGE3_VIDEO = 'Screensaver-5.mp4';
-
-      const AUDIO_TRAVEL = 'Travel-through-space.mp3';
-      const AUDIO_BLENDER = 'Blender-Hyperspace-Jump.mp3';
-      const AUDIO_ALIEN = 'Alien-Beach-Waves.mp3';
-
-      const VIDEO_CROSSFADE_SEC = 2;
-      const FINAL_BLACK_SEC = 3;
-      const ALIEN_PLAY_MS = 60000;
-      const ALIEN_FADE_MS = 1500;
-
-      hiddenBtn.addEventListener('click', () => {
-        if (!isCinematic) startCinematic();
-      });
-
-      function createVideo(src) {
-        const vid = document.createElement('video');
-        vid.src = src;
-        vid.className = 'warp-player';
-        vid.autoplay = true;
-        vid.muted = true;
-        vid.loop = false;
-        vid.preload = 'auto';
-        vid.style.opacity = '0';
-        vid.style.transition = `opacity ${VIDEO_CROSSFADE_SEC}s linear`;
-        vid.setAttribute('disablePictureInPicture', 'true');
-        vid.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
-        return vid;
-      }
-
-      function startCinematic() {
-        isCinematic = true;
-
-        const overlay = qs('#warpOverlay');
-        const bgHost = qs('#videoBg'); // our image background container
-        if (!overlay) return;
-
-        overlay.classList.add('active');
-        overlay.style.background = '#000';
-        overlay.innerHTML = '';
-
-        // hide image background while cinematic plays
-        if (bgHost) bgHost.style.opacity = '0';
-
-        try { window.mainMusic && window.mainMusic.pause(); } catch { }
-
-        const travelAudio = new Audio(AUDIO_TRAVEL);
-        travelAudio.loop = true;
-        registerAudio(travelAudio);
-
-        const blenderAudio = new Audio(AUDIO_BLENDER);
-        blenderAudio.loop = false;
-        registerAudio(blenderAudio);
-
-        const alienAudio = new Audio(AUDIO_ALIEN);
-        alienAudio.loop = false;
-        registerAudio(alienAudio);
-
-        applyVolume();
-
-        let v1, v2, v3;
-        let stage2Started = false;
-        let stage3Started = false;
-
-        // ----- Stage 1 -----
-        v1 = createVideo(STAGE1_VIDEO);
-        overlay.appendChild(v1);
-
-        travelAudio.currentTime = 0;
-        safePlayAudio(travelAudio);
-
-        v1.play().catch(() => { });
-        v1.addEventListener('loadeddata', () => requestAnimationFrame(() => { v1.style.opacity = '1'; }));
-
-        v1.addEventListener('loadedmetadata', () => {
-          const dur = v1.duration || 0;
-          const crossAt = Math.max(1, dur - VIDEO_CROSSFADE_SEC - 0.5);
-
-          const onTime = () => {
-            if (stage2Started) return;
-            if (v1.currentTime >= crossAt) {
-              v1.removeEventListener('timeupdate', onTime);
-              startStage2(overlay, v1, travelAudio, blenderAudio, alienAudio);
-            }
-          };
-
-          v1.addEventListener('timeupdate', onTime);
-        });
-
-        v1.addEventListener('error', () => {
-          startStage2(overlay, v1, travelAudio, blenderAudio, alienAudio);
-        });
-
-        // ----- Stage 2 -----
-        function startStage2(overlay, v1, travelAudio, blenderAudio, alienAudio) {
-          if (stage2Started) return;
-          stage2Started = true;
-
-          v2 = createVideo(STAGE2_VIDEO);
-          v2.loop = true;
-          overlay.appendChild(v2);
-          v2.play().catch(() => { });
-
-          requestAnimationFrame(() => {
-            v2.style.opacity = '1';
-            if (v1) v1.style.opacity = '0';
-          });
-
-          setTimeout(() => {
-            if (v1 && v1.parentNode) v1.parentNode.removeChild(v1);
-          }, VIDEO_CROSSFADE_SEC * 1000 + 80);
-
-          // Audio crossfade Travel -> Blender
-          const startTime = performance.now();
-          const startTravelVol = travelAudio.volume;
-
-          blenderAudio.volume = 0;
-          blenderAudio.currentTime = 0;
-          safePlayAudio(blenderAudio);
-
-          (function audioStep() {
-            const p = Math.min(1, (performance.now() - startTime) / 1200);
-            try {
-              travelAudio.volume = startTravelVol * (1 - p);
-              blenderAudio.volume = globalVolume * p;
-            } catch { }
-            if (p < 1) requestAnimationFrame(audioStep);
-            else { try { travelAudio.pause(); } catch { } }
-          })();
-
-          // Move to Stage 3 ONLY when blender audio ends
-          const onBlenderEnded = () => {
-            blenderAudio.removeEventListener('ended', onBlenderEnded);
-            fadeToBlack(1.25, () => {
-              startStage3(overlay, v2, blenderAudio, alienAudio, travelAudio);
-              setTimeout(clearBlack, 450);
-            });
-          };
-          blenderAudio.addEventListener('ended', onBlenderEnded);
-
-          v2.addEventListener('error', () => {
-            blenderAudio.removeEventListener('ended', onBlenderEnded);
-            startStage3(overlay, v2, blenderAudio, alienAudio, travelAudio);
-          });
-        }
-
-        // ----- Stage 3 -----
-        function startStage3(overlay, v2, blenderAudio, alienAudio, travelAudio) {
-          if (stage3Started) return;
-          stage3Started = true;
-
-          v3 = createVideo(STAGE3_VIDEO);
-          v3.loop = true;
-          overlay.appendChild(v3);
-
-          requestAnimationFrame(() => {
-            v3.style.opacity = '1';
-            if (v2) v2.style.opacity = '0';
-          });
-
-          v3.play().catch(() => { });
-
-          setTimeout(() => {
-            if (v2 && v2.parentNode) v2.parentNode.removeChild(v2);
-          }, VIDEO_CROSSFADE_SEC * 1000 + 80);
-
-          try { travelAudio.pause(); } catch { }
-          try { blenderAudio.pause(); } catch { }
-
-          // Alien fades in
-          const fadeStart = performance.now();
-          alienAudio.volume = 0;
-          alienAudio.currentTime = 0;
-          safePlayAudio(alienAudio);
-
-          (function audioFadeIn() {
-            const p = Math.min(1, (performance.now() - fadeStart) / ALIEN_FADE_MS);
-            try { alienAudio.volume = globalVolume * p; } catch { }
-            if (p < 1) requestAnimationFrame(audioFadeIn);
-          })();
-
-          // After 60s, fade out Alien & return to main page
-          setTimeout(() => {
-            const fadeOutStart = performance.now();
-            const startAlienVol = alienAudio.volume;
-
-            (function fadeOut() {
-              const p = Math.min(1, (performance.now() - fadeOutStart) / ALIEN_FADE_MS);
-              try { alienAudio.volume = startAlienVol * (1 - p); } catch { }
-              if (p < 1) requestAnimationFrame(fadeOut);
-              else {
-                try { alienAudio.pause(); } catch { }
-                endToMain(overlay, travelAudio, blenderAudio, alienAudio);
-              }
-            })();
-          }, ALIEN_PLAY_MS);
-        }
-
-        // ----- End -----
-        function endToMain(overlay, travelAudio, blenderAudio, alienAudio) {
-          fadeToBlack(FINAL_BLACK_SEC, () => {
-            if (overlay) {
-              overlay.classList.remove('active');
-              overlay.innerHTML = '';
-            }
-
-            unregisterAudio(travelAudio);
-            unregisterAudio(blenderAudio);
-            unregisterAudio(alienAudio);
-
-            // restore image background
-            const bgHost = qs('#videoBg');
-            if (bgHost) bgHost.style.opacity = '1';
-
-            clearBlack();
-
-            if (window.mainMusic) {
-              try { window.mainMusic.volume = globalVolume; } catch { }
-              safePlayAudio(window.mainMusic);
-            }
-
-            isCinematic = false;
-          });
-        }
-      }
-    })();
-  </script>
+  <script src="script.js" defer></script>
 </body>
 </html>
