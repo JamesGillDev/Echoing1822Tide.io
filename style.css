@@ -33,7 +33,7 @@ body{
   transition: opacity 900ms ease;
   filter: saturate(1.05) contrast(1.05);
 }
-.bg-layer.is-visible{ opacity: .35; }
+.bg-layer.is-visible{ opacity: 0.55; }
 
 .bg-vignette{
   position:absolute;
@@ -143,13 +143,18 @@ body{
   border: 1px solid var(--stroke);
   box-shadow: var(--shadow);
   opacity: 0;
-  transform: translate3d(0, 18px, 0) scale(.985);
-  transition: opacity 360ms ease, transform 520ms cubic-bezier(.2,.8,.2,1);
+  transform: translate3d(var(--x,0), var(--y,18px), 0) scale(var(--s,0.98));
+  transition:
+    opacity 360ms cubic-bezier(.2,.8,.2,1),
+    transform 520ms cubic-bezier(.2,.8,.2,1);
+  z-index: 1;
+  pointer-events: none;
 }
-
 .card.is-active{
   opacity: 1;
-  transform: translate3d(0, 0, 0) scale(1);
+  transform: translate3d(var(--x,0), var(--y,0), 0) scale(1);
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .card h2{
