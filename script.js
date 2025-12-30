@@ -238,4 +238,75 @@
   }
 
   document.addEventListener("DOMContentLoaded", init);
+
+  // Minimal script to enable scrollytelling and controls
+
+  // Scrollytelling logic
+  document.addEventListener("DOMContentLoaded", () => {
+    const steps = Array.from(document.querySelectorAll("#steps .step"));
+    const card = document.getElementById("card");
+
+    function showStep(idx) {
+      const tmpl = steps[idx].querySelector("template");
+      card.innerHTML = tmpl ? tmpl.innerHTML : "";
+    }
+
+    // Intersection Observer to update card as you scroll
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let visibleIdx = 0;
+        entries.forEach((entry, idx) => {
+          if (entry.isIntersecting) visibleIdx = idx;
+        });
+        showStep(visibleIdx);
+      },
+      { threshold: 0.5 }
+    );
+
+    steps.forEach((step) => observer.observe(step));
+    showStep(0);
+
+    // Theme toggle
+    const themeBtn = document.getElementById("themeBtn");
+    themeBtn.addEventListener("click", () => {
+      const body = document.body;
+      const isLight = body.getAttribute("data-theme") === "light";
+      body.setAttribute("data-theme", isLight ? "dark" : "light");
+      themeBtn.setAttribute("aria-pressed", String(!isLight));
+    });
+
+    // Mouse trail toggle
+    const trailBtn = document.getElementById("trailBtn");
+    const trail = document.getElementById("trail");
+    trailBtn.addEventListener("click", () => {
+      document.body.classList.toggle("trail-on");
+      trailBtn.setAttribute(
+        "aria-pressed",
+        String(document.body.classList.contains("trail-on"))
+      );
+    });
+    document.addEventListener("mousemove", (e) => {
+      if (document.body.classList.contains("trail-on")) {
+        trail.style.transform = `translate3d(${e.clientX - 8}px, ${e.clientY - 8}px, 0)`;
+      }
+    });
+
+    // Audio controls
+    const audio = document.getElementById("bgAudio");
+    const playBtn = document.getElementById("playBtn");
+    const volRange = document.getElementById("volRange");
+    playBtn.addEventListener("click", () => {
+      if (audio.paused) {
+        audio.play();
+        playBtn.textContent = "Pause";
+      } else {
+        audio.pause();
+        playBtn.textContent = "Play";
+      }
+    });
+    volRange.addEventListener("input", () => {
+      audio.volume = parseFloat(volRange.value);
+    });
+    audio.volume = parseFloat(volRange.value);
+  });
 })();
