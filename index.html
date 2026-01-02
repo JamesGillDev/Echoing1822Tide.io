@@ -2,82 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Career Lifeline — James Gill</title>
+  <meta name="description" content="Career Lifeline — James Gill. Reliable software. Human-first design." />
   <link rel="stylesheet" href="./style.css" />
+  <link rel="preload" as="image" href="./AirForce_Emblem.png">
+  <link rel="preload" as="image" href="./CADdets_Retro.png">
+  <link rel="preload" as="image" href="./CADdets_1.png">
+  <link rel="preload" as="image" href="./Tech_Career.png">
 </head>
-
 <body>
-  <main id="scrolly">
-    <!-- Pinned stage -->
-    <section id="stage" aria-label="Career Lifeline Scrollytelling">
-      <!-- Background layers (crossfaded on scroll) -->
-      <div class="bg" aria-hidden="true">
-        <div class="bg-layer" data-bg="1"></div>
-        <div class="bg-layer" data-bg="2"></div>
-        <div class="bg-layer" data-bg="3"></div>
-        <div class="bg-layer" data-bg="4"></div>
-        <div class="bg-overlay"></div>
-      </div>
+  <!-- Fixed background stack -->
+  <div id="bg" aria-hidden="true">
+    <img class="bg-layer" alt="" />
+    <img class="bg-layer" alt="" />
+    <img class="bg-layer" alt="" />
+    <img class="bg-layer" alt="" />
+    <div class="bg-overlay"></div>
+  </div>
 
-      <!-- Hero -->
-      <header class="hero">
-        <h1>RELIABLE SOFTWARE. <span>HUMAN-FIRST DESIGN</span></h1>
-        <p>Cloud • Software • Human-Centered Designs</p>
-        <div class="scroll-hint">Scroll ↓</div>
+  <main id="scrollArea">
+    <!-- Pinned stage -->
+    <section class="stage" aria-label="Career Lifeline scrollytelling stage">
+      <header class="topbar">
+        <a class="link" href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer">Connect on LinkedIn</a>
+
+        <div class="controls">
+          <button id="themeBtn" class="btn" type="button" title="Toggle theme">Theme</button>
+          <button id="trailBtn" class="btn" type="button" title="Toggle mouse trail">Mouse Trail</button>
+
+          <div class="audio">
+            <button id="playBtn" class="btn" type="button">Play</button>
+            <label class="vol">
+              <span>Volume</span>
+              <input id="vol" type="range" min="0" max="1" step="0.01" value="0.35" />
+            </label>
+          </div>
+
+          <!-- Tiny hidden hotspot (bottom-right) to open the video vault -->
+          <button id="vaultHotspot" class="vaultHotspot" type="button" aria-label="Open screensavers"></button>
+        </div>
       </header>
 
-      <!-- Cards + bubbles rendered by JS -->
-      <div id="cards" class="cards" aria-hidden="true"></div>
-      <div id="bubbles" class="bubbles" aria-hidden="true"></div>
-
-      <!-- Controls -->
-      <div class="controls">
-        <a class="btn" href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer">Connect on LinkedIn</a>
-
-        <button class="btn" id="themeBtn" type="button">Theme change</button>
-        <button class="btn" id="trailBtn" type="button">Mouse Trail</button>
-
-        <div class="audio">
-          <label class="audio-label" for="vol">Volume</label>
-          <input id="vol" type="range" min="0" max="1" step="0.01" value="0.35" />
-          <button class="btn" id="playBtn" type="button">Play</button>
+      <div class="hero" id="hero">
+        <h1 class="heroTitle">RELIABLE SOFTWARE. HUMAN-FIRST DESIGN</h1>
+        <p class="heroSub">Cloud • Software • Human-Centered Designs</p>
+        <div class="heroHint">
+          <span class="hintArrow">Scroll</span>
+          <span class="hintArrow">↓</span>
         </div>
       </div>
 
-      <!-- “Hidden” button: subtle + non-annoying -->
-      <button id="secretBtn" class="secret" type="button" aria-label="Open media panel">•</button>
+      <div class="bubbles" id="bubbles" aria-hidden="true"></div>
 
-      <!-- Media panel -->
-      <div id="mediaPanel" class="media-panel" hidden>
-        <div class="media-panel-inner">
-          <div class="media-panel-header">
-            <strong>Media Check</strong>
-            <button class="btn" id="closeMedia" type="button">Close</button>
-          </div>
-
-          <p class="media-note">
-            This panel is just to verify your videos are reachable on GitHub Pages.
-          </p>
-
-          <div class="media-grid">
-            <video controls preload="none" src="./Screensaver-1.mp4"></video>
-            <video controls preload="none" src="./Screensaver-4.mp4"></video>
-            <video controls preload="none" src="./Screensaver-5.mp4"></video>
-            <video controls preload="none" src="./Alien-Beach-Waves.mp4"></video>
-          </div>
-        </div>
-      </div>
+      <!-- Tap-to-start overlay (only appears if autoplay is blocked) -->
+      <button id="tapToStart" class="tapToStart" type="button" hidden>
+        Click once to start audio
+      </button>
 
       <footer class="footer">
         <span>© 2026 EchoingTide1822 — James Gill</span>
       </footer>
     </section>
+
+    <!-- Spacer creates scroll distance -->
+    <div class="spacer" id="spacer" aria-hidden="true"></div>
+
+    <!-- Fallback content (if GSAP fails / JS disabled) -->
+    <section class="fallback" id="fallback">
+      <h2>Career Lifeline</h2>
+      <p>This page is designed for scroll animation. If you can’t see the motion, your browser may be blocking scripts.</p>
+      <ul id="fallbackList"></ul>
+    </section>
   </main>
+
+  <!-- Audio (autoplay may be blocked until user interaction) -->
+  <audio id="bgm" preload="auto" loop src="./I,%20am...me.mp3"></audio>
+
+  <!-- Video vault (opened by the hidden hotspot) -->
+  <div id="vault" class="vault" hidden>
+    <div class="vaultCard" role="dialog" aria-modal="true" aria-label="Screensavers">
+      <div class="vaultHead">
+        <strong>Screensavers</strong>
+        <button id="vaultClose" class="btn" type="button">Close</button>
+      </div>
+
+      <video id="vaultVideo" class="vaultVideo" controls playsinline></video>
+
+      <div class="vaultRow">
+        <button id="prevVid" class="btn" type="button">Prev</button>
+        <button id="nextVid" class="btn" type="button">Next</button>
+        <span class="vaultMeta" id="vaultMeta"></span>
+      </div>
+      <p class="vaultTip">Tip: press <kbd>V</kbd> to open/close this.</p>
+    </div>
+  </div>
+
   <!-- GSAP + ScrollTrigger -->
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-<script src="./script.js"></script>
-<script src="./app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+  <script defer src="./app.js"></script>
 </body>
 </html>
