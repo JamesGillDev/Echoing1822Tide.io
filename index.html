@@ -1,84 +1,106 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Career Lifeline — James Gill</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="Reliable software. Human-first design. Career Lifeline — James Gill" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 
-<body>
-  <!-- Background stack -->
-  <div id="bg">
-    <img id="bg1" alt="" />
-    <img id="bg2" alt="" />
-    <img id="bg3" alt="" />
-    <img id="bg4" alt="" />
-    <div id="bgOverlay"></div>
-  </div>
+<body class="theme-corporate">
+  <!-- Background layers -->
+  <div id="bg" aria-hidden="true"></div>
 
-  <!-- UI -->
-  <header class="controls" aria-label="Site controls">
-    <div class="controlsRow">
-      <a class="btn" href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer">Connect on LinkedIn</a>
+  <!-- HUD / Controls -->
+  <header class="hud" aria-label="Controls">
+    <div class="hud-row">
+      <a class="btn" href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer">
+        Connect on LinkedIn
+      </a>
 
-      <button class="btn" id="themeBtn" type="button" aria-pressed="false">Theme</button>
-      <button class="btn" id="trailBtn" type="button" aria-pressed="false">Mouse Trail</button>
+      <button class="btn" id="btnTheme" type="button" aria-pressed="false">Theme</button>
+      <button class="btn" id="btnTrail" type="button" aria-pressed="true">Mouse Trail</button>
 
-      <button class="btn" id="screensaverBtn" type="button" title="Screensavers (V)">Screensavers</button>
+      <div class="audio">
+        <button class="btn" id="btnAudio" type="button">Play</button>
+        <label class="vol">
+          <span>Volume</span>
+          <input id="vol" type="range" min="0" max="1" step="0.01" value="0.65" />
+        </label>
+      </div>
     </div>
 
-    <div class="audioRow">
-      <label class="label" for="vol">Volume</label>
-      <input id="vol" type="range" min="0" max="1" step="0.01" value="0.35" />
-      <button class="btn" id="playBtn" type="button">Play</button>
+    <div class="hud-hint">
+      <span>Scroll ↓</span>
+      <span class="sep">•</span>
+      <span>Keys: T theme, M trail, P play, V videos</span>
     </div>
   </header>
 
-  <!-- Audio (UPDATED filename) -->
-  <audio id="bgm" preload="auto" loop src="./I_am...me.mp3"></audio>
-
-  <!-- Stage (pinned by ScrollTrigger) -->
-  <main id="stage" aria-label="Career Lifeline scrollytelling stage">
-    <section id="hero" aria-label="Hero">
-      <h1>RELIABLE SOFTWARE. HUMAN-FIRST DESIGN.</h1>
-      <p class="sub">Cloud • Software • Human-Centered Design</p>
-      <p class="hint">Scroll ↓</p>
+  <!-- HERO -->
+  <main>
+    <section class="hero" id="hero">
+      <div class="hero-inner">
+        <h1>RELIABLE SOFTWARE. HUMAN-FIRST DESIGN</h1>
+        <p class="sub">Cloud • Software • Human-Centered Designs</p>
+        <p class="micro">Career Lifeline — James Gill</p>
+      </div>
+      <div class="hero-fade" aria-hidden="true"></div>
     </section>
 
-    <div id="cards" aria-hidden="true"></div>
+    <!-- SCROLLTELLING -->
+    <section id="scrollyWrap" aria-label="Scrollytelling">
+      <div id="stage" aria-hidden="true">
+        <div id="flyZone"></div>
+      </div>
+      <!-- This is just "scroll height"; JS sets it dynamically -->
+      <div id="scrollSpace"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div>© 2026 EchoingTide1822 — James Gill</div>
+    </footer>
   </main>
 
-  <!-- Spacer that creates scroll distance -->
-  <div id="scrollSpacer" aria-hidden="true"></div>
+  <!-- Hidden bottom-right easter egg button (opens videos modal) -->
+  <button id="secretCorner" type="button" aria-label="Open media panel"></button>
 
-  <!-- Modal -->
-  <div class="modal" id="vaultModal" aria-hidden="true">
-    <div class="modalCard" role="dialog" aria-modal="true" aria-label="Screensavers">
-      <div class="modalHeader">
-        <div class="modalTitle">Screensavers</div>
-        <button class="btn" id="closeModalBtn" type="button">Close</button>
+  <!-- Screensavers / Media Modal -->
+  <div class="modal" id="mediaModal" aria-hidden="true" role="dialog" aria-label="Screensavers">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">Screensavers</div>
+        <button class="btn" id="btnCloseMedia" type="button">Close</button>
       </div>
 
-      <div class="modalBody">
-        <video id="ssVideo" controls playsinline preload="metadata"></video>
-      </div>
+      <div class="modal-body">
+        <div class="media-grid" id="mediaGrid">
+          <!-- JS inserts videos -->
+        </div>
 
-      <div class="modalFooter">
-        <button class="btn" id="prevVidBtn" type="button">Prev</button>
-        <div class="modalMeta" id="vidMeta">—</div>
-        <button class="btn" id="nextVidBtn" type="button">Next</button>
+        <div class="modal-note">
+          Tip: press <b>V</b> to open/close this. The bottom-right corner button is “hidden” on purpose.
+        </div>
       </div>
-
-      <div class="modalTip">Tip: press <b>V</b> to open/close this.</div>
     </div>
   </div>
 
-  <!-- GSAP -->
+  <!-- Mouse trail -->
+  <div id="trailDot" aria-hidden="true"></div>
+
+  <!-- Audio -->
+  <audio id="bgAudio" preload="auto" loop>
+    <!-- IMPORTANT: this filename must match exactly -->
+    <source src="./I_am...me.mp3" type="audio/mpeg" />
+  </audio>
+
+  <!-- GSAP + ScrollTrigger -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
   <!-- Your app -->
-  <script defer src="app.js"></script>
+  <script defer src="./app.js"></script>
 </body>
 </html>

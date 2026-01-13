@@ -1,438 +1,396 @@
-/* global gsap, ScrollTrigger */
-gsap.registerPlugin(ScrollTrigger);
+/* Career Lifeline — Scrollytelling Engine (GSAP ScrollTrigger)
+   - Mixed text bubbles + your Website PNGs
+   - 5–7 visible at once
+   - Smooth forward/back on scroll
+   - Hidden corner opens videos modal
+*/
 
-/* -----------------------------
-   1) Background sequence
--------------------------------- */
-const bgImages = [
-  "AirForce_Emblem.png",
-  "CADdets_Retro.png",
-  "CADdets_1.png",
-  "Tech_Career.png",
-];
+(() => {
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-const bgEls = [
-  document.getElementById("bg1"),
-  document.getElementById("bg2"),
-  document.getElementById("bg3"),
-  document.getElementById("bg4"),
-];
+  // ---------- CONFIG: update these filenames if you rename files ----------
+  // Your “sentence images” (make sure these exist next to index.html)
+  const IMAGE_BEATS = [
+    "1_Website.png","2_Website.png","3_Website.png","4_Website.png","5_Website.png","6_Website.png",
+    "7_Website.png","8_Website.png","9_Website.png","10_Website.png","11_Website.png","12_Website.png"
+  ];
 
-bgEls.forEach((el, i) => (el.src = `./${bgImages[i]}`));
-bgEls[0].style.opacity = 1;
+  // Screensaver videos (update names here)
+  const VIDEOS = [
+    "Screensaver-1.mp4",
+    "Screensaver-4.mp4",
+    "Screensaver-5.mp4",          // if you truly renamed it, you can remove this line
+    "Alien-Beach-Waves.mp4"
+  ];
 
-/* -----------------------------
-   2) Beats (your “cards”)
-   - First 12 are your images.
-   - Then we sprinkle in text beats
-     to keep “Career Lifeline” loud.
--------------------------------- */
-const beats = [
-  // Option A image beats
-  { type: "image", src: "1_Website.png", alt: "Beat 1" },
-  { type: "image", src: "2_Website.png", alt: "Beat 2" },
-  { type: "image", src: "3_Website.png", alt: "Beat 3" },
-  { type: "image", src: "4_Website.png", alt: "Beat 4" },
-  { type: "image", src: "5_Website.png", alt: "Beat 5" },
-  { type: "image", src: "6_Website.png", alt: "Beat 6" },
-  { type: "image", src: "7_Website.png", alt: "Beat 7" },
-  { type: "image", src: "8_Website.png", alt: "Beat 8" },
-  { type: "image", src: "9_Website.png", alt: "Beat 9" },
-  { type: "image", src: "10_Website.png", alt: "Beat 10" },
-  { type: "image", src: "11_Website.png", alt: "Beat 11" },
-  { type: "image", src: "12_Website.png", alt: "Beat 12" },
+  // ---------- CONTENT: “Career Lifeline” + your original beats ----------
+  // Tip: keep these short. One “beat” should read in < 2 seconds.
+  const TEXT_BEATS = [
+    { kicker: "Career Lifeline", text: "2005 — Enlisted in the U.S. Air Force. Mission-first work ethic forged." },
+    { kicker: "Career Lifeline", text: "2008–2009 — Iraq. Pressure-test environments. Real consequences." },
+    { kicker: "Career Lifeline", text: "2011–2012 — Afghanistan convoys. Calm, disciplined decision-making." },
+    { kicker: "Career Lifeline", text: "2021 — BA in Organizational Management. Systems thinking, sharpened." },
+    { kicker: "Career Lifeline", text: "2025 — Selected for MSSA (1 of 15). Transition locked in." },
+    { kicker: "Career Lifeline", text: "2026 — Cloud + Software engineering. Same standards. New tools." },
 
-  // Career Lifeline “sprinkle”
-  {
-    type: "text",
-    title: "20 years U.S. Air Force leadership.",
-    sub: "Mission ops taught me calm execution under pressure.",
-  },
-  {
-    type: "text",
-    title: "Led large-scale inspections and programs.",
-    sub: "150 sites • 17,643 personnel • $361M scope",
-  },
-  {
-    type: "text",
-    title: "Managed projects and budgets.",
-    sub: "$4.6M across 55 locations • systems and standards",
-  },
-  {
-    type: "text",
-    title: "Operational reliability mindset.",
-    sub: "Airfield recovery operations protecting $1.2B in assets",
-  },
-  {
-    type: "text",
-    title: "Now building in C# / .NET + cloud.",
-    sub: "Strong fundamentals • modern patterns • ship in increments",
-  },
-  {
-    type: "text",
-    title: "Houston-bound.",
-    sub: "Looking for a team that values integrity, growth, and impact.",
-  },
-  {
-    type: "text",
-    title: "Let’s build something dependable.",
-    sub: "Reliable software. Human-first design.",
-  },
-];
+    { kicker: "Build Philosophy", text: "Mission-ready mindset. Built under pressure. Built to last." },
+    { kicker: "Build Philosophy", text: "From the flightline to the cloud. Same discipline—new tools." },
+    { kicker: "Build Philosophy", text: "Reliable software, not fragile demos." },
 
-/* -----------------------------
-   3) Create cards
--------------------------------- */
-const cardsHost = document.getElementById("cards");
+    { kicker: "Engineering", text: "C# / .NET is my home base. Strong fundamentals, modern patterns." },
+    { kicker: "Engineering", text: "Azure-first thinking. Deploy, monitor, improve—repeat." },
+    { kicker: "Engineering", text: "APIs that behave. Clear contracts, validation, predictable errors." },
+    { kicker: "Engineering", text: "Automation-friendly workflows. Fewer “works on my machine” moments." },
+    { kicker: "Engineering", text: "Small releases. Big momentum." },
 
-const anchors = beats.map(() => ({
-  x: gsap.utils.random(-120, 120),
-  y: gsap.utils.random(-90, 90),
-  r: gsap.utils.random(-6, 6),
-  rx: gsap.utils.random(-4, 4),
-}));
+    { kicker: "Human-Centered", text: "I design for humans. Clear flows. Less friction." },
+    { kicker: "Human-Centered", text: "Clarity beats clever. Every time." },
+    { kicker: "Human-Centered", text: "Accessibility isn’t optional. Contrast, structure, keyboard sanity." },
+    { kicker: "Human-Centered", text: "Good experiences feel effortless. That’s the goal." },
 
-const cards = beats.map((b, i) => {
-  const card = document.createElement("div");
-  card.className = "card";
-  card.dataset.index = String(i);
+    { kicker: "Security", text: "Security is the baseline. Validate inputs. Defend the edges." },
+    { kicker: "Operations", text: "Calm under load. When things break, I debug—not panic." },
+    { kicker: "Wrap", text: "Let’s build something dependable." }
+  ];
 
-  const inner = document.createElement("div");
-  inner.className = "cardInner";
+  // Mix images in “sprinkled” style:
+  // We’ll interleave: text, text, image, text, image, ...
+  function buildBeatPlan() {
+    const plan = [];
+    const images = [...IMAGE_BEATS]; // we’ll attempt them; missing files just won’t show
+    let iImg = 0;
 
-  if (b.type === "image") {
-    const img = document.createElement("img");
-    img.loading = "eager";
-    img.alt = b.alt || `Beat ${i + 1}`;
-    img.src = `./${b.src}`;
-    inner.appendChild(img);
-  } else {
-    const wrap = document.createElement("div");
-    wrap.className = "cardText";
+    for (let i = 0; i < TEXT_BEATS.length; i++) {
+      plan.push({ type: "text", ...TEXT_BEATS[i] });
 
-    const title = document.createElement("div");
-    title.className = "title";
-    title.textContent = b.title;
+      // sprinkle images every ~2 beats early, then every ~3
+      const sprinkle = (i < 10) ? (i % 2 === 1) : (i % 3 === 2);
+      if (sprinkle && iImg < images.length) {
+        plan.push({ type: "img", src: images[iImg++], alt: images[iImg - 1] });
+      }
+    }
 
-    const sub = document.createElement("div");
-    sub.className = "sub";
-    sub.textContent = b.sub || "";
+    // If you have leftover images, add them at the end
+    while (iImg < images.length) {
+      plan.push({ type: "img", src: images[iImg++], alt: images[iImg - 1] });
+    }
 
-    wrap.appendChild(title);
-    wrap.appendChild(sub);
-    inner.appendChild(wrap);
+    return plan;
   }
 
-  card.appendChild(inner);
-  cardsHost.appendChild(card);
+  // ---------- UI: Theme / Trail / Audio / Modal ----------
+  const btnTheme = $("#btnTheme");
+  const btnTrail = $("#btnTrail");
+  const btnAudio = $("#btnAudio");
+  const vol = $("#vol");
+  const audio = $("#bgAudio");
+  const trailDot = $("#trailDot");
+  const secretCorner = $("#secretCorner");
+  const mediaModal = $("#mediaModal");
+  const btnCloseMedia = $("#btnCloseMedia");
+  const mediaGrid = $("#mediaGrid");
 
-  // subtle floating animation on inner (does not fight scroll transforms)
-  gsap.to(inner, {
-    y: gsap.utils.random(-10, 10),
-    duration: gsap.utils.random(2.8, 4.6),
-    repeat: -1,
-    yoyo: true,
-    ease: "sine.inOut",
-    delay: gsap.utils.random(0, 1.2),
+  let trailOn = true;
+  let theme = "corporate"; // corporate | retro
+  let audioReady = false;
+
+  function setTheme(next) {
+    theme = next;
+    document.body.classList.toggle("theme-corporate", theme === "corporate");
+    document.body.classList.toggle("theme-retro", theme === "retro");
+    btnTheme.setAttribute("aria-pressed", String(theme === "retro"));
+
+    // Optional: swap background image per theme (safe if file missing)
+    const bg = $("#bg");
+    if (theme === "retro") {
+      bg.style.backgroundImage =
+        "radial-gradient(1200px 900px at 50% 15%, rgba(255,75,214,.10), transparent 65%)," +
+        "radial-gradient(900px 800px at 15% 75%, rgba(90,120,255,.10), transparent 60%)," +
+        "radial-gradient(900px 800px at 85% 75%, rgba(255,70,220,.08), transparent 60%)," +
+        "url('./CADdets_Retro.png')";
+    } else {
+      bg.style.backgroundImage =
+        "radial-gradient(1200px 900px at 50% 15%, rgba(50,255,255,.10), transparent 65%)," +
+        "radial-gradient(900px 800px at 15% 75%, rgba(90,120,255,.10), transparent 60%)," +
+        "radial-gradient(900px 800px at 85% 75%, rgba(255,70,220,.08), transparent 60%)," +
+        "url('./Tech_Career.png')";
+    }
+  }
+
+  function setTrail(on) {
+    trailOn = on;
+    btnTrail.setAttribute("aria-pressed", String(trailOn));
+    trailDot.style.display = trailOn ? "block" : "none";
+  }
+
+  function openMedia() {
+    mediaModal.setAttribute("aria-hidden", "false");
+  }
+  function closeMedia() {
+    mediaModal.setAttribute("aria-hidden", "true");
+  }
+
+  // Audio: attempt autoplay (may be blocked). If blocked, Play becomes “Enable audio”.
+  async function tryAutoPlay() {
+    if (!audio) return;
+    audio.volume = parseFloat(vol.value || "0.65");
+    try {
+      await audio.play();
+      audioReady = true;
+      btnAudio.textContent = "Pause";
+    } catch {
+      audioReady = false;
+      btnAudio.textContent = "Play";
+      // Browser blocked autoplay — normal. We’ll start on first click/keypress.
+    }
+  }
+
+  function toggleAudio() {
+    if (!audio) return;
+    if (audio.paused) {
+      audio.volume = parseFloat(vol.value || "0.65");
+      audio.play().then(() => {
+        btnAudio.textContent = "Pause";
+      }).catch(() => {
+        // still blocked
+        btnAudio.textContent = "Play";
+      });
+    } else {
+      audio.pause();
+      btnAudio.textContent = "Play";
+    }
+  }
+
+  // Mouse trail movement
+  let mx = -999, my = -999;
+  window.addEventListener("pointermove", (e) => {
+    mx = e.clientX; my = e.clientY;
+    if (!trailOn) return;
+    trailDot.style.transform = `translate(${mx - 5}px, ${my - 5}px)`;
   });
 
-  return card;
-});
+  // Build the videos grid (muted autoplay is allowed)
+  function buildVideoGrid() {
+    mediaGrid.innerHTML = "";
+    VIDEOS.forEach((src) => {
+      const wrap = document.createElement("div");
+      const v = document.createElement("video");
+      v.src = `./${src}`;
+      v.muted = true;
+      v.loop = true;
+      v.autoplay = true;
+      v.playsInline = true;
+      v.preload = "metadata";
+      v.controls = true;
 
-/* -----------------------------
-   4) ScrollTrigger engine
-   Goal: ~7 visible cards at once.
--------------------------------- */
-const hero = document.getElementById("hero");
-const scrollSpacer = document.getElementById("scrollSpacer");
+      // If a video is missing or unsupported, hide it to avoid ugly tiles.
+      v.addEventListener("error", () => {
+        wrap.style.display = "none";
+      });
 
-const total = beats.length;
-
-// Give enough scroll distance for smooth cinematic motion
-const scrollLen = Math.max(7000, total * 1200);
-scrollSpacer.style.height = `${scrollLen}px`;
-
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
-}
-
-function updateBackground(progress) {
-  // progress maps across 4 backgrounds, last stays.
-  const t = progress * (bgImages.length - 1);
-  const i = Math.floor(t);
-  const f = t - i;
-
-  bgEls.forEach((el, idx) => (el.style.opacity = 0));
-
-  const a = clamp(i, 0, bgEls.length - 1);
-  const b = clamp(i + 1, 0, bgEls.length - 1);
-
-  if (a === bgEls.length - 1) {
-    bgEls[a].style.opacity = 1;
-    return;
-  }
-
-  bgEls[a].style.opacity = String(1 - f);
-  bgEls[b].style.opacity = String(f);
-}
-
-function updateCards(progress) {
-  // “t” is fractional index so motion is smooth between beats
-  const t = progress * (total - 1);
-
-  // Hero fades fast once scrolling begins
-  const heroAlpha = clamp(1 - progress * 5, 0, 1);
-  gsap.set(hero, { autoAlpha: heroAlpha });
-
-  for (let i = 0; i < cards.length; i++) {
-    const card = cards[i];
-    const a = anchors[i];
-
-    const d = i - t;               // float distance from “active”
-    const ad = Math.abs(d);
-
-    // show ~7 cards at once (dist <= ~3.2)
-    const visible = ad <= 3.2;
-
-    if (!visible) {
-      gsap.set(card, { autoAlpha: 0 });
-      continue;
-    }
-
-    const dir = d === 0 ? 0 : (d > 0 ? 1 : -1);
-
-    // Cinematic path:
-    // - upcoming cards are “behind” camera
-    // - passed cards move forward “past” the camera
-    let z = 320 - ad * 320;
-    if (d < 0) z += (-d) * 520; // passed = fly forward
-
-    const spreadX = 260 + ad * 220;
-    const spreadY = 40 + ad * 140;
-
-    const x = dir * spreadX + a.x;
-    const y =
-      (d > 0 ? -spreadY : spreadY * 0.25) + a.y;
-
-    let scale = 1.06 - ad * 0.18;
-    scale = clamp(scale, 0.42, 1.08);
-
-    let alpha = 1 - ad * 0.33;
-    alpha = clamp(alpha, 0, 1);
-
-    // fade quickly after passing
-    if (d < -0.6) {
-      alpha *= clamp(1 - (-d - 0.6) * 0.85, 0, 1);
-    }
-
-    const rotY = (-dir * (10 + ad * 7)) + a.r;
-    const rotX = (d > 0 ? 5 : -5) + a.rx;
-
-    // Higher zIndex for near cards
-    const zIndex = String(1000 - Math.floor(ad * 120));
-
-    gsap.set(card, {
-      xPercent: -50,
-      yPercent: -50,
-      x,
-      y,
-      z,
-      rotationY: rotY,
-      rotationX: rotX,
-      scale,
-      autoAlpha: alpha,
-      zIndex,
-      transformPerspective: 1200,
-      transformStyle: "preserve-3d",
-    });
-  }
-}
-
-ScrollTrigger.create({
-  trigger: scrollSpacer,
-  start: "top top",
-  end: "bottom bottom",
-  pin: "#stage",
-  scrub: true,
-  onUpdate: (self) => {
-    updateBackground(self.progress);
-    updateCards(self.progress);
-  },
-});
-
-/* Initialize first frame */
-updateBackground(0);
-updateCards(0);
-
-/* -----------------------------
-   5) Audio (autoplay reality check)
-   Browsers often block autoplay with sound.
-   We try immediately, then again on first user interaction.
--------------------------------- */
-const bgm = document.getElementById("bgm");
-const playBtn = document.getElementById("playBtn");
-const vol = document.getElementById("vol");
-
-bgm.volume = Number(vol.value || 0.35);
-
-function setPlayLabel() {
-  playBtn.textContent = bgm.paused ? "Play" : "Pause";
-}
-
-async function tryPlayAudio() {
-  try {
-    await bgm.play();
-  } catch {
-    // blocked until user interacts — that’s normal
-  } finally {
-    setPlayLabel();
-  }
-}
-
-vol.addEventListener("input", () => {
-  bgm.volume = Number(vol.value);
-});
-
-playBtn.addEventListener("click", async () => {
-  if (bgm.paused) await tryPlayAudio();
-  else bgm.pause();
-  setPlayLabel();
-});
-
-// Attempt on load
-tryPlayAudio();
-
-// Try again on first real interaction (scroll/click/key)
-const unlock = async () => {
-  await tryPlayAudio();
-  window.removeEventListener("pointerdown", unlock);
-  window.removeEventListener("keydown", unlock);
-  window.removeEventListener("wheel", unlock);
-};
-window.addEventListener("pointerdown", unlock, { once: true });
-window.addEventListener("keydown", unlock, { once: true });
-window.addEventListener("wheel", unlock, { once: true });
-
-/* -----------------------------
-   6) Theme + Mouse Trail (simple)
--------------------------------- */
-const themeBtn = document.getElementById("themeBtn");
-const trailBtn = document.getElementById("trailBtn");
-
-themeBtn.addEventListener("click", () => {
-  const on = themeBtn.getAttribute("aria-pressed") === "true";
-  themeBtn.setAttribute("aria-pressed", String(!on));
-  // optional: you can swap CSS variables here later if you want a true light theme
-});
-
-let trailOn = false;
-let trailDot = null;
-
-trailBtn.addEventListener("click", () => {
-  trailOn = !trailOn;
-  trailBtn.setAttribute("aria-pressed", String(trailOn));
-
-  if (trailOn && !trailDot) {
-    trailDot = document.createElement("div");
-    trailDot.style.position = "fixed";
-    trailDot.style.width = "10px";
-    trailDot.style.height = "10px";
-    trailDot.style.borderRadius = "999px";
-    trailDot.style.pointerEvents = "none";
-    trailDot.style.zIndex = "9999";
-    trailDot.style.background = "rgba(0, 220, 255, 0.65)";
-    trailDot.style.boxShadow = "0 0 30px rgba(0, 220, 255, 0.35)";
-    document.body.appendChild(trailDot);
-
-    window.addEventListener("mousemove", (e) => {
-      if (!trailOn) return;
-      trailDot.style.left = `${e.clientX - 5}px`;
-      trailDot.style.top = `${e.clientY - 5}px`;
+      wrap.appendChild(v);
+      mediaGrid.appendChild(wrap);
     });
   }
 
-  if (!trailOn && trailDot) {
-    trailDot.style.opacity = "0";
+  // Buttons / shortcuts
+  btnTheme.addEventListener("click", () => setTheme(theme === "corporate" ? "retro" : "corporate"));
+  btnTrail.addEventListener("click", () => setTrail(!trailOn));
+  btnAudio.addEventListener("click", () => toggleAudio());
+  vol.addEventListener("input", () => { if (audio) audio.volume = parseFloat(vol.value || "0.65"); });
+
+  secretCorner.addEventListener("click", () => openMedia());
+  btnCloseMedia.addEventListener("click", () => closeMedia());
+  mediaModal.addEventListener("click", (e) => {
+    if (e.target === mediaModal) closeMedia();
+  });
+
+  window.addEventListener("keydown", (e) => {
+    const k = e.key.toLowerCase();
+    if (k === "t") setTheme(theme === "corporate" ? "retro" : "corporate");
+    if (k === "m") setTrail(!trailOn);
+    if (k === "p") toggleAudio();
+    if (k === "v") {
+      const open = mediaModal.getAttribute("aria-hidden") === "false";
+      open ? closeMedia() : openMedia();
+    }
+  });
+
+  // ---------- SCROLLTELLING (GSAP) ----------
+  function rand(min, max) {
+    return Math.random() * (max - min) + min;
   }
-  if (trailOn && trailDot) {
-    trailDot.style.opacity = "1";
-  }
-});
 
-/* -----------------------------
-   7) Screensavers modal
--------------------------------- */
-const modal = document.getElementById("vaultModal");
-const screensaverBtn = document.getElementById("screensaverBtn");
-const closeModalBtn = document.getElementById("closeModalBtn");
-const prevVidBtn = document.getElementById("prevVidBtn");
-const nextVidBtn = document.getElementById("nextVidBtn");
-const ssVideo = document.getElementById("ssVideo");
-const vidMeta = document.getElementById("vidMeta");
+  function buildBeatsDOM(beatPlan) {
+    const zone = $("#flyZone");
+    zone.innerHTML = "";
 
-// Candidate list (supports your rename)
-const candidateVideos = [
-  "Screensaver-1.mp4",
-  "Screensaver-4.mp4",
-  "Alien-Beach-Waves.mp4", // your renamed file
-  // If you later add more, just list them here.
-];
+    const els = [];
 
-let videos = [];
-let vidIndex = 0;
+    beatPlan.forEach((b) => {
+      const el = document.createElement("div");
+      el.className = "beat";
 
-async function buildVideoList() {
-  // Filter out missing files so you don’t get “format/MIME not found” panels.
-  const checks = await Promise.all(
-    candidateVideos.map(async (name) => {
-      try {
-        const res = await fetch(`./${name}`, { method: "GET" });
-        if (!res.ok) return null;
-        return name;
-      } catch {
-        return null;
+      if (b.type === "img") {
+        const img = document.createElement("img");
+        img.src = `./${b.src}`;
+        img.alt = b.alt || "";
+        img.loading = "lazy";
+        img.addEventListener("error", () => {
+          // If an image doesn't exist, remove that beat silently
+          el.remove();
+        });
+        el.appendChild(img);
+      } else {
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+
+        const kicker = document.createElement("div");
+        kicker.className = "kicker";
+        kicker.textContent = b.kicker || "Career Lifeline";
+
+        const text = document.createElement("div");
+        text.className = "text";
+        text.textContent = b.text;
+
+        bubble.appendChild(kicker);
+        bubble.appendChild(text);
+        el.appendChild(bubble);
       }
-    })
-  );
-  videos = checks.filter(Boolean);
-  if (videos.length === 0) {
-    videos = []; // none found
+
+      zone.appendChild(el);
+      els.push(el);
+    });
+
+    return els;
   }
-}
 
-function showVideo(i) {
-  if (!videos.length) {
-    ssVideo.removeAttribute("src");
-    vidMeta.textContent = "No screensaver videos found in folder.";
-    return;
+  function buildScroll(els) {
+    if (!window.gsap || !window.ScrollTrigger) {
+      console.error("GSAP/ScrollTrigger not loaded.");
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Kill old triggers on rebuild (resize)
+    ScrollTrigger.getAll().forEach(t => t.kill());
+    gsap.globalTimeline.clear();
+
+    // Stage “space” based on number of beats
+    const scrollSpace = $("#scrollSpace");
+    const pxPerBeat = 260; // tune this to taste
+    const total = Math.max(5200, els.length * pxPerBeat);
+    scrollSpace.style.height = `${total}px`;
+
+    // Spread relative to viewport (prevents “blown up” / off-screen chaos)
+    const spreadX = Math.min(520, window.innerWidth * 0.34);
+    const spreadY = Math.min(260, window.innerHeight * 0.22);
+
+    // Core timeline
+    const tl = gsap.timeline({
+      defaults: { ease: "none" },
+      scrollTrigger: {
+        trigger: "#scrollyWrap",
+        start: "top top",
+        end: `+=${total}`,
+        scrub: 1.05,
+        pin: "#stage",
+        anticipatePin: 1
+      }
+    });
+
+    // We want 5–7 items visible at once:
+    // Each beat lives ~2.8 units; start spacing ~0.45 units => ~6 overlapping
+    const spacing = 0.45;
+
+    els.forEach((el, i) => {
+      // Random-ish but stable feel
+      const x = rand(-spreadX, spreadX);
+      const y = rand(-spreadY, spreadY);
+      const rot = rand(-6, 6);
+
+      // Slight size variance so not all “same size at same time”
+      const baseScale = rand(0.75, 1.02);
+
+      const t0 = i * spacing;
+
+      // Start far away (small + faint)
+      tl.set(el, {
+        xPercent: -50,
+        yPercent: -50,
+        x, y,
+        rotationZ: rot,
+        z: -1200,
+        scale: baseScale * 0.55,
+        opacity: 0
+      }, t0);
+
+      // Move toward user (fade in)
+      tl.to(el, {
+        opacity: 1,
+        z: -220,
+        scale: baseScale * 0.95,
+        duration: 1.05
+      }, t0);
+
+      // “In front” moment (largest)
+      tl.to(el, {
+        z: 120,
+        scale: baseScale * 1.08,
+        duration: 0.85
+      }, t0 + 1.05);
+
+      // Fly past user and fade out
+      tl.to(el, {
+        opacity: 0,
+        z: 520,
+        scale: baseScale * 1.15,
+        duration: 0.95
+      }, t0 + 1.9);
+    });
+
+    // Make the hero fade into scrolly
+    gsap.to("#hero", {
+      opacity: 0,
+      scrollTrigger: {
+        trigger: "#scrollyWrap",
+        start: "top bottom",
+        end: "top top",
+        scrub: true
+      }
+    });
   }
-  vidIndex = (i + videos.length) % videos.length;
-  const name = videos[vidIndex];
-  ssVideo.src = `./${name}`;
-  ssVideo.play().catch(() => {});
-  vidMeta.textContent = `${name} (${vidIndex + 1}/${videos.length})`;
-}
 
-function openModal() {
-  modal.classList.add("show");
-  modal.setAttribute("aria-hidden", "false");
-  buildVideoList().then(() => showVideo(vidIndex));
-}
+  // ---------- INIT ----------
+  function init() {
+    // Set initial UI
+    setTheme(theme);
+    setTrail(true);
+    buildVideoGrid();
 
-function closeModal() {
-  modal.classList.remove("show");
-  modal.setAttribute("aria-hidden", "true");
-  ssVideo.pause();
-}
+    // Attempt autoplay (may be blocked)
+    tryAutoPlay();
 
-screensaverBtn.addEventListener("click", openModal);
-closeModalBtn.addEventListener("click", closeModal);
-prevVidBtn.addEventListener("click", () => showVideo(vidIndex - 1));
-nextVidBtn.addEventListener("click", () => showVideo(vidIndex + 1));
+    // Build scrolly
+    const plan = buildBeatPlan();
+    const els = buildBeatsDOM(plan);
 
-window.addEventListener("keydown", (e) => {
-  if (e.key.toLowerCase() === "v") {
-    if (modal.classList.contains("show")) closeModal();
-    else openModal();
+    // Give images a moment to resolve layout, then build scroll
+    setTimeout(() => buildScroll(els), 50);
+
+    // Rebuild on resize (keeps spacing sane)
+    let resizeTimer = null;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const plan2 = buildBeatPlan();
+        const els2 = buildBeatsDOM(plan2);
+        buildScroll(els2);
+      }, 200);
+    });
   }
-});
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
