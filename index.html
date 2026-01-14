@@ -2,103 +2,177 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark light" />
   <title>Career Lifeline — James Gill</title>
-  <meta name="description" content="Reliable software. Human-first design. Career Lifeline — James Gill" />
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="app.js"></script>
 </head>
 
-<body class="theme-corporate">
-  <!-- Background layers -->
-  <div id="bg" aria-hidden="true"></div>
+<body data-theme="night">
+  <!-- Ambient background -->
+  <div class="bg" aria-hidden="true"></div>
+  <div class="bg-vignette" aria-hidden="true"></div>
 
-  <!-- HUD / Controls -->
-  <header class="hud" aria-label="Controls">
+  <!-- 3D Scene (fixed) -->
+  <div id="scene" aria-hidden="true"></div>
+
+  <!-- HUD -->
+  <header class="hud" role="banner">
     <div class="hud-row">
-      <a class="btn" href="https://www.linkedin.com/in/james-e-gill" target="_blank" rel="noopener noreferrer">
-        Connect on LinkedIn
-      </a>
+      <a class="hud-chip" id="btnLinkedIn" href="#" rel="noopener" target="_blank">Connect on LinkedIn</a>
 
-      <button class="btn" id="btnTheme" type="button" aria-pressed="false">Theme</button>
+      <button class="hud-chip" id="btnTheme" type="button" title="Cycle theme">Theme</button>
+      <button class="hud-chip" id="btnTrail" type="button" title="Toggle mouse trail">Mouse Trail</button>
+      <button class="hud-chip" id="btnAutoScroll" type="button" title="Toggle auto-scroll">Auto Scroll</button>
 
-      <div class="audio">
-        <button class="btn" id="btnAudio" type="button">Play</button>
-        <label class="vol">
-          <span>Volume</span>
-          <input id="vol" type="range" min="0" max="1" step="0.01" value="0.65" />
-        </label>
-      </div>
+      <button class="hud-chip" id="btnAudio" type="button" title="Toggle music">Music</button>
+
+      <label class="hud-volume" title="Volume">
+        <span class="hud-volume-label">Vol</span>
+        <input id="vol" type="range" min="0" max="1" step="0.01" />
+      </label>
+
+      <span class="hud-hint" id="hudHint" aria-live="polite"></span>
     </div>
 
-    <div class="hud-hint">
-      <span>Scroll ↓</span>
-      <span class="sep"></span>
-    </div>
+    <nav class="hud-nav" aria-label="Page navigation">
+      <a class="hud-navlink" href="#about">About</a>
+      <a class="hud-navlink" href="#projects">Projects</a>
+      <a class="hud-navlink" href="#experience">Experience</a>
+      <a class="hud-navlink" href="#education">Education</a>
+      <a class="hud-navlink" href="#contact">Contact</a>
+    </nav>
   </header>
 
-  <!-- HERO -->
-  <main>
-    <section class="hero" id="hero">
+  <!-- Hidden bottom-right hotspot (restored) -->
+  <button id="secretHotspot" type="button" aria-label="Hidden screensaver control"></button>
+
+  <!-- Main scroll content -->
+  <main id="scrollRoot">
+    <section class="section hero" id="top">
       <div class="hero-inner">
-        <h1>RELIABLE SOFTWARE. HUMAN-FIRST DESIGN</h1>
-        <p class="sub">Cloud • Software • Human-Centered Designs</p>
-        <p class="micro">Career Lifeline — James Gill</p>
+        <h1>Reliable Software. Human-First Design.</h1>
+        <p class="sub">
+          Cloud • Software • Human-Centered Design
+        </p>
+
+        <p class="micro">
+          Scroll to fly through the lifeline. <span class="kbd">V</span> opens screensavers.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn" href="#projects">View Projects</a>
+          <a class="btn ghost" href="#about">Quick Intro</a>
+        </div>
       </div>
-      <div class="hero-fade" aria-hidden="true"></div>
     </section>
 
-    <!-- SCROLLTELLING -->
-    <section id="scrollyWrap" aria-label="Scrollytelling">
-      <div id="stage" aria-hidden="true">
-        <div id="flyZone"></div>
-      </div>
-      <!-- This is just "scroll height"; JS sets it dynamically -->
-      <div id="scrollSpace"></div>
-    </section>
+    <!-- Spacer sections (the 3D bubbles live in the scene; these give us scroll length) -->
+    <section class="section spacer" aria-hidden="true"></section>
+    <section class="section spacer" aria-hidden="true"></section>
+    <section class="section spacer" aria-hidden="true"></section>
+    <section class="section spacer" aria-hidden="true"></section>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <div>© 2026 EchoingTide1822 — James Gill</div>
-    </footer>
+    <!-- Clean bottom section -->
+    <section class="section final" id="about">
+      <div class="container">
+        <h2>About</h2>
+        <p>
+          I’m a mission-driven problem solver transitioning from 20 years of high-stakes operations into
+          cloud & software development—focused on building reliable systems with a human-first mindset.
+        </p>
+
+        <div class="cards" id="projects">
+          <div class="card">
+            <h3>Personal Projects</h3>
+            <ul class="bullets">
+              <li><b>GazeShot v1.0 App (stable)</b> — Windows tray utility with multi-monitor awareness and voice-controlled screenshot capture using WPF, Win32 APIs, and speech recognition.</li>
+              <li><b>Battleship Web Game</b> — Browser-based Battleship using HTML/CSS/JS; turn-based logic, responsive design, local storage game state.</li>
+              <li><b>Gift Helper App</b> — C#/.NET gift recommendation tool with recipient preferences and simple database storage.</li>
+              <li><b>Bolt Master Game App</b> — Mobile physics puzzle game concept; Unity (or similar), app-store standards.</li>
+              <li><b>(True Free) AI Image Upscaler App</b> — Free upscaler using open-source AI models; on-device processing + friendly UI.</li>
+              <li><b>MSSA Training Tracker App</b> — Tracker for assignments/milestones with dashboards/reminders; C#, .NET MAUI (or similar), Azure storage.</li>
+            </ul>
+          </div>
+
+          <div class="card" id="experience">
+            <h3>Experience</h3>
+            <p class="muted">
+              20 years in mission-critical power generation & leadership—translating operations discipline into software delivery.
+            </p>
+            <ul class="bullets">
+              <li>Leadership, training, and operational execution under real constraints.</li>
+              <li>Risk management, quality, standardization, and “keep it running” reliability mindset.</li>
+              <li>Now applying that to cloud apps, tooling, and UX-aware engineering.</li>
+            </ul>
+          </div>
+
+          <div class="card" id="education">
+            <h3>Education</h3>
+            <ul class="bullets">
+              <li>Microsoft Software & Systems Academy (MSSA) — Cloud Application Development</li>
+              <li>BA — Organizational Management</li>
+              <li>Mechanical/Electrical Technology (Assoc.)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card contact" id="contact">
+          <h3>Contact</h3>
+          <p class="muted">
+            Best way to reach me: LinkedIn.
+          </p>
+          <div class="contact-actions">
+            <a class="btn" id="btnLinkedIn2" href="#" rel="noopener" target="_blank">Open LinkedIn</a>
+            <a class="btn ghost" href="#top">Back to top</a>
+          </div>
+        </div>
+
+        <p class="footer">
+          <span class="muted">Tip:</span> Press <span class="kbd">V</span> for screensavers • Auto-scroll is optional • Volume starts low on purpose.
+        </p>
+      </div>
+    </section>
   </main>
 
-  <!-- Hidden bottom-right easter egg button (opens videos modal) -->
-  <button id="secretCorner" type="button" aria-label="Open media panel"></button>
-
-  <!-- Screensavers / Media Modal -->
-  <div class="modal" id="mediaModal" aria-hidden="true" role="dialog" aria-label="Screensavers">
-    <div class="modal-card">
+  <!-- Bubble detail modal -->
+  <div class="modal" id="detailModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Details">
+    <div class="modal-panel">
       <div class="modal-head">
-        <div class="modal-title">Screensavers</div>
-        <button class="btn" id="btnCloseMedia" type="button">Close</button>
+        <div class="modal-title" id="detailTitle">Details</div>
+        <button class="modal-close" id="detailClose" type="button">Close</button>
+      </div>
+      <div class="modal-body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <!-- Screensaver overlay (single player restored) -->
+  <div class="overlay" id="ssOverlay" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Screensavers">
+    <div class="overlay-panel">
+      <div class="overlay-head">
+        <div class="overlay-title">Screensavers</div>
+        <button class="overlay-close" id="btnCloseSS" type="button">Close</button>
       </div>
 
-      <div class="modal-body">
-        <div class="media-grid" id="mediaGrid">
-          <!-- JS inserts videos -->
-        </div>
+      <div class="overlay-video">
+        <video id="ssVideo" playsinline></video>
+      </div>
 
-        <div class="modal-note">
-          Tip: press <b>V</b> to open/close this. The bottom-right corner button is “hidden” on purpose.
-        </div>
+      <div class="overlay-controls">
+        <button class="btn small" id="btnPrevSS" type="button">Prev</button>
+        <button class="btn small ghost" id="btnToggleSSMute" type="button">Mute</button>
+        <button class="btn small" id="btnNextSS" type="button">Next</button>
+      </div>
+
+      <div class="overlay-foot">
+        <span class="muted" id="ssLabel">—</span>
+        <span class="muted">Tip: <span class="kbd">V</span> toggles this. Bottom-right corner is “hidden” on purpose.</span>
       </div>
     </div>
   </div>
 
-  <!-- Mouse trail -->
-  <div id="trailDot" aria-hidden="true"></div>
-
-  <!-- Audio -->
-  <audio id="bgAudio" preload="auto" loop autoplay muted>
-    <!-- IMPORTANT: this filename must match exactly -->
-    <source src="./I_am...me.mp3" type="audio/mpeg" />
-  </audio>
-
-  <!-- GSAP + ScrollTrigger -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-
-  <!-- Your app -->
-  <script defer src="./app.js"></script>
+  <!-- Mouse trail container -->
+  <div id="trail" aria-hidden="true"></div>
 </body>
 </html>
