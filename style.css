@@ -1,479 +1,313 @@
-:root{
-  --bg: #070a0f;
-  --panel: rgba(10, 14, 22, 0.62);
-  --panelSolid: rgba(10, 14, 22, 0.88);
-  --stroke: rgba(255,255,255,0.10);
-  --text: rgba(255,255,255,0.92);
-  --muted: rgba(255,255,255,0.70);
-  --link: #7ee3ff;
-  --shadow: 0 18px 50px rgba(0,0,0,0.45);
-}
+(() => {
+  const snapRoot = document.getElementById("snapRoot");
 
-*{ box-sizing:border-box; }
-html,body{ height:100%; }
+  // ----- Intro overlay -----
+  const introOverlay = document.getElementById("introOverlay");
+  const introVideo = document.getElementById("introVideo");
 
-body{
-  margin:0;
-  background: var(--bg);
-  color: var(--text);
-  font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  overflow:hidden; /* scroll happens in snapRoot */
-}
-
-/* -------- Intro overlay -------- */
-#introOverlay{
-  position:fixed;
-  inset:0;
-  z-index: 9999;
-  background:#000;
-  opacity:1;
-  transition: opacity 520ms ease;
-  pointer-events:none;
-}
-
-#introOverlay.hidden{
-  opacity:0;
-}
-
-#introVideo{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  opacity:0.92;
-}
-
-#introOverlayTint{
-  position:absolute;
-  inset:0;
-  background: radial-gradient(1200px 700px at 60% 35%, rgba(0,0,0,0.25), rgba(0,0,0,0.75));
-}
-
-/* -------- Top bar -------- */
-.topbar{
-  position:fixed;
-  top:0; left:0; right:0;
-  z-index: 50;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding: 14px 18px;
-
-  border-bottom: 1px solid var(--stroke);
-  background: rgba(10,14,22,0.45);
-
-  /* Safari compatibility: needs prefixed backdrop filter */
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-}
-
-@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .topbar{
-    background: var(--panelSolid);
+  function hideIntro() {
+    if (!introOverlay) return;
+    introOverlay.classList.add("hidden");
+    window.setTimeout(() => introOverlay.remove(), 650);
   }
-}
 
-.brand__name{
-  font-weight: 800;
-  letter-spacing: 0.2px;
-  font-size: 16px;
-}
-.brand__tag{
-  font-size: 12px;
-  color: var(--muted);
-}
+  // Autoplay is generally allowed only if muted; we keep it muted. 
+  if (introVideo) {
+    introVideo.addEventListener("ended", hideIntro);
+    introVideo.addEventListener("error", hideIntro);
 
-.topbar__right{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
+    // If the video never loads, fail open after 2.5s
+    window.setTimeout(() => {
+      if (document.body.contains(introOverlay)) hideIntro();
+    }, 2500);
+  } else {
+    hideIntro();
+  }
 
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding: 10px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--stroke);
-  background: rgba(10,14,22,0.55);
+  // ----- Music (single track) -----
+  const bgMusic = document.getElementById("bgMusic");
+  const musicToggle = document.getElementById("musicToggle");
+  const musicVol = document.getElementById("musicVol");
 
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  if (bgMusic && musicVol) {
+    bgMusic.volume = Number(musicVol.value || 0.25);
+    musicVol.addEventListener("input", () => {
+      bgMusic.volume = Number(musicVol.value);
+    });
+  }
 
-  color: var(--text);
-  text-decoration:none;
-  box-shadow: 0 10px 26px rgba(0,0,0,0.35);
-  cursor:pointer;
-  -webkit-user-select:none;
-  user-select:none;
-}
+  async function toggleMusic() {
+    if (!bgMusic || !musicToggle) return;
 
-.btn--ghost{
-  background: transparent;
-}
+    if (bgMusic.paused) {
+      try {
+        await bgMusic.play();
+        musicToggle.textContent = "Music: ON";
+        musicToggle.setAttribute("aria-pressed", "true");
+      } catch {
+        // You requested the old autoplay-blocked toast be removed, so we stay silent here.
+      }
+    } else {
+      bgMusic.pause();
+      musicToggle.textContent = "Music: OFF";
+      musicToggle.setAttribute("aria-pressed", "false");
+    }
+  }
 
-.btn:hover{
-  border-color: rgba(126,227,255,0.35);
-}
+  if (musicToggle) {
+    musicToggle.addEventListener("click", toggleMusic);
+  }
 
-.vol{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding: 8px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--stroke);
-  background: rgba(10,14,22,0.45);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
+  // ----- Scroll snap backgrounds + arrows -----
+  const sections = Array.from(document.querySelectorAll(".snapSection"));
 
-.vol__label{
-  font-size: 12px;
-  color: var(--muted);
-}
-.vol__slider{
-  width: 140px;
-}
+  function setSectionBackgroundVars(section) {
+    const bgA = section.getAttribute("data-bg");
+    const bgB = section.getAttribute("data-bg2");
 
-/* -------- Nav -------- */
-.sectionNav{
-  position:fixed;
-  top: 62px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 40;
+    section.style.setProperty("--bgA", bgA ? `url("${bgA}")` : "none");
+    section.style.setProperty("--bgB", bgB ? `url("${bgB}")` : "none");
+  }
 
-  display:flex;
-  gap:10px;
-  padding: 10px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--stroke);
-  background: rgba(10,14,22,0.40);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
+  sections.forEach(setSectionBackgroundVars);
 
-.sectionNav__link{
-  color: var(--muted);
-  text-decoration:none;
-  font-size: 13px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-}
-.sectionNav__link:hover{
-  color: var(--text);
-  border-color: rgba(255,255,255,0.12);
-}
-.sectionNav__link.active{
-  color: var(--text);
-  border-color: rgba(126,227,255,0.35);
-}
+  // Use IntersectionObserver to:
+  // 1) highlight nav
+  // 2) trigger bg swap (Experience: AirForce_Emblem.png -> CADdets_1.png while staying in same section)
+  const navLinks = Array.from(document.querySelectorAll(".sectionNav__link"));
 
-/* -------- Scroll-snap sections -------- */
-.snapRoot{
-  position:fixed;
-  inset:0;
-  padding-top: 106px; /* space for header+nav */
-  overflow-y:auto;
-  scroll-snap-type: y mandatory;
-  scroll-behavior:smooth;
-}
+  function setActiveNav(id) {
+    navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === `#${id}`));
+  }
 
-/* Each section is a “locked page” */
-.snapSection{
-  position:relative;
-  min-height: calc(100vh - 106px);
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  padding: 28px 18px 72px;
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-}
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
 
-/* Background layers (supports “change background while staying in same section”) */
-.snapSection::before,
-.snapSection::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  filter: saturate(0.95) contrast(1.05) brightness(0.65);
-  transform: scale(1.02);
-}
+      const section = entry.target;
+      const id = section.id;
+      setActiveNav(id);
 
-.snapSection::before{
-  background-image: var(--bgA);
-  opacity: 1;
-  transition: opacity 900ms ease;
-}
+      // background swap behavior when entering a section that has bg2
+      const hasBg2 = Boolean(section.getAttribute("data-bg2"));
+      section.classList.remove("swapBg");
+      if (hasBg2) {
+        window.setTimeout(() => {
+          // still in DOM and likely still in view
+          section.classList.add("swapBg");
+        }, 650);
+      }
+    });
+  }, { root: snapRoot, threshold: 0.6 });
 
-.snapSection::after{
-  background-image: var(--bgB);
-  opacity: 0;
-  transition: opacity 900ms ease;
-}
+  sections.forEach(s => io.observe(s));
 
-/* When active, crossfade to bgB (if provided) */
-.snapSection.swapBg::after{ opacity: 1; }
-.snapSection.swapBg::before{ opacity: 0; }
+  // Scroll cue + arrows: go to next section
+  function scrollToNext(fromSection) {
+    const nextSel = fromSection.getAttribute("data-next");
+    if (!nextSel) return;
+    const next = document.querySelector(nextSel);
+    if (!next) return;
+    next.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
-/* Dark overlay to keep text readable */
-.snapSection .panel{
-  position:relative;
-  z-index:1;
+  // Click handlers for cue/arrow
+  document.querySelectorAll("[data-scroll-next]").forEach(el => {
+    const section = el.closest(".snapSection");
+    if (!section) return;
 
-  width: min(1020px, 100%);
-  padding: 24px 22px;
-  border-radius: 18px;
-  border: 1px solid var(--stroke);
-  background: var(--panel);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
-}
+    el.addEventListener("click", () => scrollToNext(section));
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        scrollToNext(section);
+      }
+    });
+  });
 
-/* Typography */
-h1,h2,h3{ margin:0 0 10px; }
-h2{ font-size: 28px; letter-spacing:0.2px; }
-h3{ font-size: 16px; color: var(--text); }
+  // Also: make arrow-only elements work
+  document.querySelectorAll(".scrollArrowOnly").forEach(el => {
+    const section = el.closest(".snapSection");
+    if (!section) return;
 
-.heroTitle{
-  font-size: 40px;
-  letter-spacing: 0.3px;
-}
-.heroSubtitle{
-  color: var(--muted);
-  max-width: 70ch;
-}
+    el.addEventListener("click", () => scrollToNext(section));
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        scrollToNext(section);
+      }
+    });
+  });
 
-.muted{ color: var(--muted); }
-.tiny{ font-size: 12px; }
+  // ----- Hidden Screensaver Sequence -----
+  const eggBtn = document.getElementById("easterEgg");
+  const modal = document.getElementById("screensaverModal");
+  const ssVideo = document.getElementById("ssVideo");
+  const ssAudio = document.getElementById("ssAudio");
 
-/* Chips */
-.chips{
-  margin-top: 14px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.chip{
-  font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--stroke);
-  background: rgba(0,0,0,0.25);
-}
+  const CLOSE_SELECTORS = "[data-close]";
+  function qsAll(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
 
-/* Layout helpers */
-.grid2{
-  margin-top: 16px;
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.grid3{
-  margin-top: 16px;
-  display:grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px;
-}
+  function openModal() {
+    if (!modal) return;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
 
-.card{
-  border-radius: 16px;
-  border: 1px solid var(--stroke);
-  background: rgba(0,0,0,0.22);
-  padding: 14px 14px;
-}
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "hidden"; // body already hidden; snapRoot scrolls
+    stopScreensaver();
+  }
 
-.card ul{
-  margin: 10px 0 0;
-  padding-left: 18px;
-  color: var(--muted);
-}
+  if (modal) {
+    qsAll(CLOSE_SELECTORS, modal).forEach(el => el.addEventListener("click", closeModal));
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("open")) closeModal();
+    });
+  }
 
-.projectsGrid{
-  margin-top: 16px;
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
+  // Fade helpers
+  function clamp01(x) { return Math.max(0, Math.min(1, x)); }
 
-.projectCard{
-  border-radius: 16px;
-  border: 1px solid var(--stroke);
-  background: rgba(0,0,0,0.22);
-  padding: 14px;
-}
+  function fadeOpacity(el, from, to, ms) {
+    return new Promise(resolve => {
+      const start = performance.now();
+      function tick(now) {
+        const t = clamp01((now - start) / ms);
+        const v = from + (to - from) * t;
+        el.style.opacity = String(v);
+        if (t >= 1) resolve();
+        else requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
 
-.projectCard__head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
-}
+  function fadeAudio(audio, from, to, ms) {
+    return new Promise(resolve => {
+      const start = performance.now();
+      function tick(now) {
+        const t = clamp01((now - start) / ms);
+        const v = from + (to - from) * t;
+        audio.volume = clamp01(v);
+        if (t >= 1) resolve();
+        else requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
 
-.tags{ display:flex; flex-wrap:wrap; gap:8px; }
-.tag{
-  font-size: 12px;
-  padding: 5px 9px;
-  border-radius: 999px;
-  border: 1px solid var(--stroke);
-  color: var(--muted);
-  background: rgba(0,0,0,0.18);
-}
+  let screensaverRunning = false;
 
-.actions{
-  margin-top: 10px;
-  display:flex;
-  gap:10px;
-}
+  async function playStep({ videoSrc, audioSrc, fadeInMs, fadeOutMs, audioLeadMs = 0, videoFadeInDelayMs = 0 }) {
+    if (!ssVideo || !ssAudio) return;
 
-.link{
-  color: var(--link);
-  text-decoration:none;
-}
-.link:hover{ text-decoration:underline; }
+    // Load sources
+    ssVideo.src = videoSrc;
+    ssVideo.load();
 
-/* Education */
-.eduGrid{
-  margin-top: 14px;
-  display:grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap:14px;
-}
-.eduCard{
-  border-radius: 16px;
-  border: 1px solid var(--stroke);
-  background: rgba(0,0,0,0.22);
-  padding: 14px;
-}
+    ssAudio.src = audioSrc;
+    ssAudio.load();
 
-/* Contact */
-.contactCard{
-  margin-top: 12px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
+    ssVideo.style.opacity = "0";
+    ssAudio.volume = 0;
 
-/* Scroll cues */
-.scrollCue{
-  position:absolute;
-  left:50%;
-  bottom: 14px;
-  transform: translateX(-50%);
-  z-index:2;
-  text-align:center;
-  cursor:pointer;
-  color: var(--muted);
-  -webkit-user-select:none;
-  user-select:none;
-}
+    // Start audio first if requested (3rd iteration: hear audio before video appears)
+    await ssAudio.play().catch(() => {});
+    if (audioLeadMs > 0) {
+      await fadeAudio(ssAudio, 0, 0.85, Math.min(650, fadeInMs));
+      await new Promise(r => setTimeout(r, audioLeadMs));
+    }
 
-.scrollCue__text{
-  font-size: 12px;
-  letter-spacing: 0.2px;
-}
-.scrollCue__arrow{
-  font-size: 22px;
-  margin-top: 2px;
-  opacity: 0.9;
-}
+    // Start video
+    await ssVideo.play().catch(() => {});
+    if (videoFadeInDelayMs > 0) await new Promise(r => setTimeout(r, videoFadeInDelayMs));
 
-.scrollArrowOnly{
-  position:absolute;
-  left:50%;
-  bottom: 14px;
-  transform: translateX(-50%);
-  z-index:2;
-  cursor:pointer;
-  font-size: 22px;
-  color: var(--muted);
-  -webkit-user-select:none;
-  user-select:none;
-}
+    // Fade in visuals + audio (if audio not already led in)
+    if (audioLeadMs === 0) {
+      await Promise.all([
+        fadeOpacity(ssVideo, 0, 1, fadeInMs),
+        fadeAudio(ssAudio, 0, 0.85, fadeInMs),
+      ]);
+    } else {
+      await fadeOpacity(ssVideo, 0, 1, fadeInMs);
+    }
 
-/* Hidden easter egg */
-.easterEgg{
-  position:fixed;
-  right: 10px;
-  bottom: 10px;
-  width: 22px;
-  height: 22px;
-  opacity: 0;
-  z-index: 60;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
+    // Wait until near the end of the video, then fade out
+    const safetyMs = 250;
+    const durationMs = isFinite(ssVideo.duration) ? (ssVideo.duration * 1000) : 8000;
+    const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
+    await new Promise(r => setTimeout(r, waitMs));
 
-/* Modal */
-.modal{
-  position:fixed;
-  inset:0;
-  z-index: 10000;
-  display:none;
-}
-.modal.open{ display:block; }
+    await Promise.all([
+      fadeOpacity(ssVideo, 1, 0, fadeOutMs),
+      fadeAudio(ssAudio, ssAudio.volume, 0, fadeOutMs),
+    ]);
 
-.modal__backdrop{
-  position:absolute;
-  inset:0;
-  background: rgba(0,0,0,0.68);
-}
+    ssVideo.pause();
+    ssAudio.pause();
+  }
 
-.modal__content{
-  position:absolute;
-  inset: 5%;
-  border-radius: 18px;
-  border: 1px solid var(--stroke);
-  background: rgba(10,14,22,0.55);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  box-shadow: var(--shadow);
-  overflow:hidden;
-}
+  async function runScreensaverSequence() {
+    if (screensaverRunning) return;
+    screensaverRunning = true;
 
-.modal__close{
-  position:absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
-  border-radius: 999px;
-  padding: 8px 10px;
-  border: 1px solid var(--stroke);
-  background: rgba(0,0,0,0.35);
-  color: var(--text);
-  cursor:pointer;
-}
+    openModal();
 
-.ssVideo{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity 450ms ease;
-}
+    // Step 1: Screensaver_1.mp4 + Travel_through_space.mp3 then fade out quick
+    await playStep({
+      videoSrc: "assets/screensavers/Screensaver_1.mp4",
+      audioSrc: "assets/screensavers/Travel_through_space.mp3",
+      fadeInMs: 450,
+      fadeOutMs: 450,
+    });
+    if (!screensaverRunning) return;
 
-/* Mobile */
-@media (max-width: 860px){
-  .sectionNav{ display:none; }
-  .grid2{ grid-template-columns: 1fr; }
-  .grid3{ grid-template-columns: 1fr; }
-  .projectsGrid{ grid-template-columns: 1fr; }
-  .eduGrid{ grid-template-columns: 1fr; }
-  .heroTitle{ font-size: 32px; }
-  .vol__slider{ width: 90px; }
-}
+    // Step 2: quick fade in video+audio for Screensaver_2 + Blender_Hyperspace_Jump
+    await playStep({
+      videoSrc: "assets/screensavers/Screensaver_2.mp4",
+      audioSrc: "assets/screensavers/Blender_Hyperspace_Jump.mp3",
+      fadeInMs: 450,
+      fadeOutMs: 450,
+    });
+    if (!screensaverRunning) return;
+
+    // Step 3: 5s fade in video; fast fade in audio; audio heard before beach is seen
+    await playStep({
+      videoSrc: "assets/screensavers/Screensaver_3.mp4",
+      audioSrc: "assets/screensavers/Alien_Beach_Waves.mp3",
+      fadeInMs: 5000,              // slow video fade-in
+      fadeOutMs: 650,
+      audioLeadMs: 700,            // audio begins before video is visible
+      videoFadeInDelayMs: 0
+    });
+
+    // Done
+    closeModal();
+  }
+
+  function stopScreensaver() {
+    screensaverRunning = false;
+    if (ssVideo) {
+      ssVideo.pause();
+      ssVideo.removeAttribute("src");
+      ssVideo.load();
+      ssVideo.style.opacity = "0";
+    }
+    if (ssAudio) {
+      ssAudio.pause();
+      ssAudio.removeAttribute("src");
+      ssAudio.load();
+      ssAudio.volume = 0;
+    }
+  }
+
+  if (eggBtn) {
+    eggBtn.addEventListener("click", runScreensaverSequence);
+  }
+
+})();
