@@ -81,6 +81,16 @@
   async function runIntroFrames() {
     if (!introOverlay || !introCanvas) return;
 
+    // AUTOPLAY music with intro
+    if (bgMusic && bgMusic.paused) {
+      try {
+        await bgMusic.play();
+      } catch {
+        // Ignore autoplay errors (browser restrictions)
+      }
+      syncMusicUI && syncMusicUI();
+    }
+
     const ctx = introCanvas.getContext("2d", { alpha: true });
     if (!ctx) return hideIntro();
 
@@ -172,14 +182,11 @@
   async function toggleMusic() {
     if (!bgMusic) return;
 
-    // Ensure the element is ready to play (some browsers are picky)
-    bgMusic.load();
-
     if (bgMusic.paused) {
       try {
         await bgMusic.play();
       } catch {
-        // No autoplay nag/toast (per your request). The button stays accurate.
+        // No autoplay nag/toast (per your request).
       }
     } else {
       bgMusic.pause();
