@@ -3,33 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="James E. Gill — U.S. Air Force veteran transitioning into cloud & software development. Projects, experience, and contact." />
-  <title>James E. Gill | Cloud & Software Development</title>
+  <meta name="description" content="James Gill — U.S. Air Force veteran transitioning into cloud & software development. Projects, experience, and contact." />
+  <title>James Gill | Cloud & Software Development</title>
 
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-  <!-- Intro overlay (plays immediately, then fades away) -->
+  <!-- Intro overlay (PNG frame fly-past; main page visible behind it) -->
   <div id="introOverlay" aria-hidden="true">
-    <video id="introVideo" muted autoplay preload="auto">
-      <source src="assets/intro/Website_Flypast.webm" type="video/webm" />
-      <source src="assets/intro/Website_Flypast.mp4" type="video/mp4" />
-    </video>
-    <div id="introOverlayTint"></div>
+    <canvas id="introCanvas" aria-hidden="true"></canvas>
+    <div id="introOverlayTint" aria-hidden="true"></div>
   </div>
 
   <!-- Fixed header -->
   <header class="topbar">
     <div class="topbar__left">
       <div class="brand">
-        <div class="brand__name">James E. Gill</div>
+        <div class="brand__name">James Gill</div>
         <div class="brand__tag">Cloud App Dev • C#/.NET • UX-aware Engineering</div>
       </div>
     </div>
 
     <div class="topbar__right">
-      <a class="btn" href="https://www.linkedin.com/in/james-e-gill/" target="_blank" rel="noopener">Connect on LinkedIn</a>
+      <a class="btn" href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a>
 
       <button id="musicToggle" class="btn btn--ghost" type="button" aria-pressed="false">
         Music: OFF
@@ -42,12 +39,12 @@
     </div>
   </header>
 
-  <!-- Main nav (simple + clean) -->
+  <!-- Section nav (small, recruiter-clean) -->
   <nav class="sectionNav" aria-label="Section navigation">
     <a href="#hero" class="sectionNav__link">Top</a>
     <a href="#about" class="sectionNav__link">About</a>
-    <a href="#projects" class="sectionNav__link">Projects</a>
     <a href="#experience" class="sectionNav__link">Experience</a>
+    <a href="#projects" class="sectionNav__link">Projects</a>
     <a href="#education" class="sectionNav__link">Education</a>
     <a href="#contact" class="sectionNav__link">Contact</a>
   </nav>
@@ -58,7 +55,7 @@
     <section
       id="hero"
       class="snapSection"
-      data-bg="assets/img/Tech_Career.png"
+      data-bg="Tech_Career.png"
       data-next="#about"
       data-hint="Scroll down to learn more"
     >
@@ -87,8 +84,8 @@
     <section
       id="about"
       class="snapSection"
-      data-bg="assets/img/Tech_Career.png"
-      data-next="#projects"
+      data-bg="Tech_Career.png"
+      data-next="#experience"
     >
       <div class="panel">
         <h2>About</h2>
@@ -126,105 +123,19 @@
           </div>
         </div>
 
-        <!-- You requested to remove this section; leaving it fully removed -->
+        <!-- Removed (by request): “What recruiters actually care about …” block -->
       </div>
 
       <div class="scrollArrowOnly" role="button" tabindex="0" data-scroll-next aria-label="Scroll to next section">⌄</div>
     </section>
 
-    <!-- PROJECTS -->
-    <section
-      id="projects"
-      class="snapSection"
-      data-bg="assets/img/CADdets_Retro.png"
-      data-next="#experience"
-    >
-      <div class="panel">
-        <h2>Projects</h2>
-        <p class="muted">Each project has a name, a link, and a short “what it is / why it matters” description.</p>
-
-        <div class="projectsGrid">
-          <article class="projectCard">
-            <header class="projectCard__head">
-              <h3>ScreenWarden v1.0 (stable)</h3>
-              <div class="tags">
-                <span class="tag">WPF</span><span class="tag">Win32</span><span class="tag">Speech</span>
-              </div>
-            </header>
-            <p>
-              Windows tray utility with multi-monitor awareness and voice-controlled screenshot capture using WPF, Win32 APIs, and speech recognition.
-            </p>
-            <div class="actions">
-              <a class="link" href="#" target="_blank" rel="noreferrer">GitHub</a>
-              <!-- Keep these for later, but hidden for now:
-              <a class="link" href="#" target="_blank" rel="noreferrer">Demo</a>
-              -->
-            </div>
-          </article>
-
-          <article class="projectCard">
-            <header class="projectCard__head">
-              <h3>Battleship Web Game</h3>
-              <div class="tags">
-                <span class="tag">HTML</span><span class="tag">CSS</span><span class="tag">JS</span>
-              </div>
-            </header>
-            <p>
-              Browser-based Battleship with turn-based logic, responsive layout, and local storage for game state. Focus: clean UI + predictable rules.
-            </p>
-            <div class="actions">
-              <a class="link" href="#" target="_blank" rel="noreferrer">GitHub</a>
-              <!-- Keep these for later, but hidden for now:
-              <a class="link" href="#" target="_blank" rel="noreferrer">Live</a>
-              -->
-            </div>
-          </article>
-
-          <article class="projectCard">
-            <header class="projectCard__head">
-              <h3>Gift Helper App</h3>
-              <div class="tags">
-                <span class="tag">C#</span><span class="tag">.NET</span>
-              </div>
-            </header>
-            <p>
-              Gift recommendation tool: user inputs preferences, app suggests ideas, includes simple storage. Focus: UX flow + maintainable logic.
-            </p>
-            <div class="actions">
-              <a class="link" href="#" target="_blank" rel="noreferrer">GitHub</a>
-            </div>
-          </article>
-
-          <article class="projectCard">
-            <header class="projectCard__head">
-              <h3>MSSA Training Tracker</h3>
-              <div class="tags">
-                <span class="tag">.NET</span><span class="tag">Azure</span>
-              </div>
-            </header>
-            <p>
-              Internal tool to track assignments/milestones with progress dashboards and reminders. Focus: “small release” discipline.
-            </p>
-            <div class="actions">
-              <a class="link" href="#" target="_blank" rel="noreferrer">GitHub</a>
-            </div>
-          </article>
-        </div>
-
-        <!-- You requested to remove: Project Snapshots grid + the “Visual proof…” sentence -->
-        <!-- (Removed completely.) -->
-      </div>
-
-      <div class="scrollArrowOnly" role="button" tabindex="0" data-scroll-next aria-label="Scroll to next section">⌄</div>
-    </section>
-
-    <!-- EXPERIENCE -->
+    <!-- EXPERIENCE (AirForce -> swaps to CADdets while staying in section) -->
     <section
       id="experience"
       class="snapSection"
-      data-bg="assets/img/AirForce_Emblem.png"
-      data-bg2="assets/img/CADdets_1.png"
-      data-next="#education"
+      data-bg="AirForce_Emblem.png"
+      data-bg2="CADdets_1.png"
+      data-next="#projects"
     >
       <div class="panel">
         <h2>Experience</h2>
@@ -240,9 +151,107 @@
             </ul>
           </div>
 
-          <!-- You requested to remove this entire block: “What recruiters actually care about”
-               so it’s removed. -->
+          <div class="card">
+            <h3>What that translates to in software</h3>
+            <ul>
+              <li>Reliable behavior &amp; clear failure modes</li>
+              <li>Maintainable structure over “flashy” complexity</li>
+              <li>Shipping small, then improving steadily</li>
+            </ul>
+          </div>
         </div>
+      </div>
+
+      <div class="scrollArrowOnly" role="button" tabindex="0" data-scroll-next aria-label="Scroll to next section">⌄</div>
+    </section>
+
+    <!-- PROJECTS (GitHub cards only; no snapshots grid) -->
+    <section
+      id="projects"
+      class="snapSection"
+      data-bg="CADdets_1.png"
+      data-next="#education"
+    >
+      <div class="panel">
+        <h2>Projects</h2>
+        <p class="muted">Each project has a name, a link, and a short “what it is / why it matters” description.</p>
+
+        <div class="projectsGrid">
+          <article class="projectCard">
+            <header class="projectCard__head">
+              <h3>ScreenWarden v1.0</h3>
+              <div class="tags">
+                <span class="tag">WPF</span><span class="tag">Win32</span><span class="tag">Speech</span>
+              </div>
+            </header>
+            <p>
+              Windows tray utility with multi-monitor awareness and voice-controlled screenshot capture using WPF, Win32 APIs, and speech recognition.
+            </p>
+            <div class="actions">
+              <a class="link" href="https://github.com/Echoing-1822-Tide" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <!-- Keep these for later, but hidden for now:
+              <a class="link" href="#" target="_blank" rel="noreferrer">Repo</a>
+              <a class="link" href="#" target="_blank" rel="noreferrer">Demo</a>
+              <a class="link" href="#" target="_blank" rel="noreferrer">Design notes</a>
+              <a class="link" href="#" target="_blank" rel="noreferrer">Live</a>
+              -->
+            </div>
+          </article>
+
+          <article class="projectCard">
+            <header class="projectCard__head">
+              <h3>Battleship Web Game</h3>
+              <div class="tags">
+                <span class="tag">HTML</span><span class="tag">CSS</span><span class="tag">JS</span>
+              </div>
+            </header>
+            <p>
+              Browser-based Battleship with turn-based logic, responsive layout, and local storage for game state. Focus: clean UI + predictable rules.
+            </p>
+            <div class="actions">
+              <a class="link" href="https://github.com/Echoing-1822-Tide" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <!-- Keep these for later, but hidden for now:
+              <a class="link" href="#" target="_blank" rel="noreferrer">Repo</a>
+              <a class="link" href="#" target="_blank" rel="noreferrer">Live</a>
+              -->
+            </div>
+          </article>
+
+          <article class="projectCard">
+            <header class="projectCard__head">
+              <h3>GPT Home</h3>
+              <div class="tags">
+                <span class="tag">Architecture</span><span class="tag">UX</span><span class="tag">Systems</span>
+              </div>
+            </header>
+            <p>
+              Smart-home assistant concept: local-first thinking, clear phases, and practical constraints. Focus: documentation, UX flow, and integration planning.
+            </p>
+            <div class="actions">
+              <a class="link" href="https://github.com/Echoing-1822-Tide" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <!-- Keep these for later, but hidden for now:
+              <a class="link" href="#" target="_blank" rel="noreferrer">Repo</a>
+              -->
+            </div>
+          </article>
+
+          <article class="projectCard">
+            <header class="projectCard__head">
+              <h3>Gift Helper App</h3>
+              <div class="tags">
+                <span class="tag">C#</span><span class="tag">.NET</span><span class="tag">UX</span>
+              </div>
+            </header>
+            <p>
+              Gift recommendation tool: user inputs preferences, app suggests ideas, includes simple storage. Focus: UX flow + maintainable logic.
+            </p>
+            <div class="actions">
+              <a class="link" href="https://github.com/Echoing-1822-Tide" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </article>
+        </div>
+
+        <!-- Removed (by request): Project Snapshots grid + “Visual proof…” sentence -->
       </div>
 
       <div class="scrollArrowOnly" role="button" tabindex="0" data-scroll-next aria-label="Scroll to next section">⌄</div>
@@ -252,7 +261,7 @@
     <section
       id="education"
       class="snapSection"
-      data-bg="assets/img/CADdets_1.png"
+      data-bg="CADdets_Retro.png"
       data-next="#contact"
     >
       <div class="panel">
@@ -283,13 +292,13 @@
     <section
       id="contact"
       class="snapSection"
-      data-bg="assets/img/CADdets_Retro.png"
+      data-bg="CADdets_Retro.png"
     >
       <div class="panel">
         <h2>Contact</h2>
 
         <div class="contactCard">
-          <a class="btn" href="https://www.linkedin.com/in/james-e-gill/" target="_blank" rel="noopener">LinkedIn</a>
+          <a class="btn" href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a>
           <a class="btn btn--ghost" href="mailto:echoing1822tide@outlook.com">echoing1822tide@outlook.com</a>
         </div>
 
@@ -301,19 +310,30 @@
     </section>
   </main>
 
-  <!-- Hidden easter egg button (bottom-right) -->
+  <!-- Hidden easter egg hotspot (bottom-right) -->
   <button id="easterEgg" class="easterEgg" type="button" aria-label="Open hidden screensaver"></button>
 
-  <!-- Screensaver modal -->
+  <!-- Screensaver modal (no visible Screensaver button anywhere) -->
   <div id="screensaverModal" class="modal" aria-hidden="true" role="dialog" aria-label="Screensaver">
     <div class="modal__backdrop" data-close></div>
-    <div class="modal__content">
+    <div class="modal__content" role="document">
       <button class="modal__close" type="button" data-close aria-label="Close">✕</button>
 
-      <video id="ssVideo" class="ssVideo" preload="auto"></video>
+      <video id="ssVideo" class="ssVideo" preload="auto" muted></video>
       <audio id="ssAudio" preload="auto"></audio>
     </div>
   </div>
+  <script>
+    // Ensure inline playback on browsers that do not support the 'playsinline' attribute (e.g., Firefox)
+    document.addEventListener('DOMContentLoaded', function() {
+      var ssVideo = document.getElementById('ssVideo');
+      if (ssVideo) {
+        // Set both camelCase and lowercase for maximum compatibility
+        ssVideo.playsInline = true;
+        ssVideo.setAttribute('playsinline', '');
+      }
+    });
+  </script>
 
   <!-- Music element (single track) -->
   <audio id="bgMusic" preload="auto" loop>
@@ -321,18 +341,5 @@
   </audio>
 
   <script src="app.js"></script>
-  <script>
-    // Ensure playsInline is set for browsers that require JS property
-    document.addEventListener('DOMContentLoaded', function() {
-      var introVideo = document.getElementById('introVideo');
-      if (introVideo) {
-        introVideo.playsInline = true;
-      }
-      var ssVideo = document.getElementById('ssVideo');
-      if (ssVideo) {
-        ssVideo.playsInline = true;
-      }
-    });
-  </script>
 </body>
 </html>
