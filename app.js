@@ -13,7 +13,6 @@
   function hideIntro() {
     if (!introOverlay) return;
     introOverlay.classList.add("hidden");
-    // Do NOT remove the overlay from the DOM!
   }
 
   function clamp01(x) { return Math.max(0, Math.min(1, x)); }
@@ -137,10 +136,10 @@
     const ctx = introCanvas.getContext("2d", { alpha: true });
     if (!ctx) return hideIntro();
 
-    // 12 images, 12s total, each image flies for 4s, staggered
+    // 12 images, 32s total, each image flies for 12s, staggered
     const frames = Array.from({ length: 12 }, (_, i) => `assets/beats/${i + 1}_Website.png`);
-    const duration = 32000; // ms (was 12000)
-    const imgDuration = 12000; // ms per image (spread out for smoothness)
+    const duration = 32000; // ms
+    const imgDuration = 12000; // ms per image
     const directions = Array.from({ length: 12 }, (_, i) => (i % 2 === 0 ? "left" : "right"));
 
     // Preload images
@@ -176,8 +175,10 @@
 
     // Safety: never let intro trap the page
     window.setTimeout(() => {
-      if (introOverlay && introOverlay.parentNode) introOverlay.parentNode.removeChild(introOverlay);
-    }, 700);
+      hideIntro();
+      introAnimationRunning = false;
+      cancelAnimationFrame(introRafId);
+    }, duration + 1200);
   }
 
   function stopIntroFrames() {

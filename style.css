@@ -228,18 +228,17 @@ li{ margin: 6px 0; }
 
 .snapRoot{
   position: relative;
-  height: 100vh;
+  min-height: 100vh;
   overflow-y: auto;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
   overscroll-behavior-y: none;
   scroll-padding-top: calc(var(--topbarH) + 16px);
-  padding-top: var(--topbarH);
 }
 
 .snapSection{
   position: relative;
-  min-height: calc(100vh + var(--topbarH));
+  min-height: 100vh;
   margin-top: calc(-1 * var(--topbarH));
   padding-top: calc(var(--topbarH) + 44px);
   scroll-snap-align: start;
