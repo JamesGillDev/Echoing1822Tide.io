@@ -27,7 +27,11 @@
 }
 
 *{ box-sizing: border-box; }
-html, body{ height: 100%; }
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}
 
 body{
   margin: 0;
