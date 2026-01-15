@@ -30,7 +30,9 @@
 html, body {
   height: 100%;
   width: 100%;
-  overflow: auto;
+  margin: 0;
+  padding: 0;
+  overflow: auto; /* allow scrolling */
 }
 
 body{
@@ -133,6 +135,13 @@ li{ margin: 6px 0; }
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+}
+
+.brand.left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
 }
 
@@ -241,11 +250,13 @@ li{ margin: 6px 0; }
 .snapRoot{
   position: relative;
   min-height: 100vh;
+  width: 100%;
   overflow-y: auto;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
   overscroll-behavior-y: none;
-  scroll-padding-top: calc(var(--topbarH) + 16px);
+  scroll-padding-top: var(--topbarH, 64px);
+  /* REMOVE any height: 100vh or overflow: hidden here! */
 }
 
 .snapSection{
