@@ -185,26 +185,37 @@
 
   // Track if intro video only plays once per page load
   let introPlayed = false;
+  let introPlaying = false; // Track if intro is currently running
 
   async function runIntroFramesOnce() {
-    if (introPlayed) return;
+    if (introPlayed || introPlaying) return;
     introPlayed = true;
+    introPlaying = true;
     await runIntroFrames();
+    introPlaying = false;
+  }
+
+  // Stop intro video immediately
+  function stopIntroFrames() {
+    if (!introOverlay || !introCanvas) return;
+    hideIntro();
+    introPlaying = false;
   }
 
   async function toggleMusic() {
     if (!bgMusic) return;
 
-    // Play intro animation only once per page load
-    await runIntroFramesOnce();
-
     if (bgMusic.paused) {
+      // Music: OFF → ON, play intro once
+      await runIntroFramesOnce();
       try {
         await bgMusic.play();
       } catch {
-        // No toast/nag (per your request). If play fails, UI stays OFF.
+        // No toast/nag
       }
     } else {
+      // Music: ON → OFF, stop intro if playing
+      stopIntroFrames();
       bgMusic.pause();
     }
 
