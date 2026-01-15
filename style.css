@@ -134,6 +134,7 @@ body {
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   margin: 2rem 0;
+  align-items: stretch; /* Make all cards same height */
 }
 
 .grid2 {
@@ -206,6 +207,24 @@ body {
   z-index: 100;
   opacity: 0.7;
   cursor: pointer;
+  /* Hide the easter egg button but keep it accessible */
+  opacity: 0;
+  pointer-events: auto;
+  outline: none;
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  /* Optional: add a focus style for keyboard users */
+}
+
+.easterEgg:focus {
+  opacity: 0.2;
+  outline: 2px solid #5865f2;
 }
 
 .modal {
