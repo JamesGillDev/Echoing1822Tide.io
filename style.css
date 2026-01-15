@@ -239,7 +239,7 @@ li{ margin: 6px 0; }
 
 .snapSection{
   position: relative;
-  min-height: 100vh;
+  min-height: calc(100vh + var(--topbarH));
   margin-top: calc(-1 * var(--topbarH));
   padding-top: calc(var(--topbarH) + 44px);
   scroll-snap-align: start;
