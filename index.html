@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="James E. Gill — U.S. Air Force veteran transitioning into cloud & software development. Projects, experience, and contact." />
   <title>James E. Gill | Cloud & Software Development</title>
+
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <!-- Intro overlay (PNG frame fly-past; main page visible behind it) -->
   <div id="introOverlay" class="hidden" aria-hidden="true">
@@ -16,15 +18,20 @@
 
   <!-- Fixed header -->
   <header class="topbar">
-    <div class="brand brand--centered">
-      <div class="brand__name">James E. Gill</div>
-      <div class="brand__tag">Cloud App Dev • C#/.NET • UX-aware Engineering</div>
+    <div class="topbar__left">
+      <div class="brand">
+        <div class="brand__name">James E. Gill</div>
+        <div class="brand__tag">Cloud App Dev • C#/.NET • UX-aware Engineering</div>
+      </div>
     </div>
+
     <div class="topbar__right">
       <a class="btn" href="https://www.linkedin.com/in/james-e-gill/" target="_blank" rel="noopener">LinkedIn</a>
+
       <button id="musicToggle" class="btn btn--ghost" type="button" aria-pressed="false">
         Music: OFF
       </button>
+
       <div class="vol">
         <label class="vol__label" for="musicVol">Vol</label>
         <input id="musicVol" class="vol__slider" type="range" min="0" max="1" step="0.01" value="0.25" />
@@ -42,8 +49,8 @@
     <a href="#contact" class="sectionNav__link">Contact</a>
   </nav>
 
-  <!-- Main scrollable content -->
-  <div id="snapRoot" class="snapRoot">
+  <!-- Scroll-snap container -->
+  <main id="snapRoot" class="snapRoot">
     <!-- HERO -->
     <section
       id="hero"
@@ -300,7 +307,7 @@
       </div>
       <!-- No arrow + no words here by request -->
     </section>
-  </div>
+  </main>
 
   <!-- Hidden easter egg hotspot (bottom-right) -->
   <button id="easterEgg" class="easterEgg" type="button" aria-label="Open hidden screensaver"></button>
