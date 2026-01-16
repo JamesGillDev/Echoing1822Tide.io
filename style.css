@@ -254,6 +254,7 @@ li{ margin: 6px 0; }
   filter: blur(2.5px);
   /* Ensure the border is visible under the overlay */
   box-shadow: 0 0 0 12px transparent;
+  /* Do NOT set opacity here, keep image visible */
 }
 
 .snapSection.swapBg::before{
@@ -268,8 +269,14 @@ li{ margin: 6px 0; }
   z-index: -1;
   pointer-events: none;
   border-radius: 32px;
-  /* Animated shifting gradient for left/right borders */
+  /* Animated, shifting, blurred gradient border with transparent center */
   background:
+    radial-gradient(circle at 50% 50%,
+      rgba(0,0,0,0) 55%,
+      rgba(54,214,255,0.18) 65%,
+      rgba(155,123,255,0.18) 85%,
+      rgba(54,214,255,0.18) 100%
+    ),
     linear-gradient(120deg,
       #36d6ff 0%,
       #9b7bff 25%,
@@ -277,15 +284,18 @@ li{ margin: 6px 0; }
       #9b7bff 75%,
       #36d6ff 100%
     );
-  filter: blur(18px);
-  opacity: 0.55;
-  animation: borderGradientShift 8s linear infinite;
+  filter: blur(24px);
+  opacity: 0.7;
+  animation: borderGradientShift 10s linear infinite;
+  background-size: 200% 200%;
+  background-position: 0% 50%;
 }
 
-/* Animate the gradient's angle for shifting effect */
+/* Animate the gradient's position for a "swimming" effect */
 @keyframes borderGradientShift {
   0%   { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 /* Center panel */
