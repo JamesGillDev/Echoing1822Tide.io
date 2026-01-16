@@ -340,7 +340,7 @@
 
     if (ssVideo) {
       ssVideo.pause();
-      ssVideo.removeAttribute("src");
+      ssVideo.removeAttribute("src"); // Remove src to avoid flashes
       ssVideo.load();
       ssVideo.style.opacity = "0";
     }
@@ -441,7 +441,7 @@
     ssVideo.style.opacity = "0";
     ssAudio.volume = 0;
 
-    // Set sources (case-sensitive on GitHub Pages!)
+    // Set sources
     ssVideo.src = videoSrc;
     ssVideo.load();
 
@@ -454,14 +454,26 @@
     // Make modal visible before playing
     openModal();
 
-    // ✅ CRITICAL FIX:
-    // Call play() immediately (before any await) to preserve user gesture autoplay permission.
-    const videoPlayPromise = safePlay(ssVideo);
-    const audioPlayPromise = safePlay(ssAudio);
+    // Wait for video to be ready before playing
+    await new Promise((resolve) => {
+      if (ssVideo.readyState >= 2) return resolve();
+      ssVideo.oncanplay = () => resolve();
+      setTimeout(resolve, 1200); // fallback after 1.2s
+    });
 
-    // Give the browser a moment to start buffering/playing
-    await Promise.race([videoPlayPromise, wait(900)]);
-    await Promise.race([audioPlayPromise, wait(900)]);
+    // Play video and audio
+    try {
+      await ssVideo.play();
+    } catch (e) {
+      // If play fails, skip this step or show a fallback
+      console.warn("Screensaver video failed to play", e);
+      return;
+    }
+
+    try {
+      ssAudio.currentTime = 0;
+      await ssAudio.play();
+    } catch (_) {}
 
     if (!screensaverRunning) return;
 
@@ -488,7 +500,9 @@
     if (!screensaverRunning) return;
 
     const safetyMs = 250;
-    const durationMs = await getDurationMs(ssVideo, 1500);
+    const durationMs = isFinite(ssVideo.duration) && ssVideo.duration > 0
+      ? ssVideo.duration * 1000
+      : 8000;
     const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
 
     await wait(waitMs);

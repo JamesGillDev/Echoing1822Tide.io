@@ -235,14 +235,9 @@ li{ margin: 6px 0; }
    --------------------------------------------------------- */
 
 .snapRoot{
-  position: fixed;
-  top: var(--topbarH);
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  height: calc(100vh - var(--topbarH));
-  height: calc(100dvh - var(--topbarH));
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
 
   overflow-y: auto;
   overflow-x: hidden;
@@ -264,8 +259,8 @@ li{ margin: 6px 0; }
 .snapSection{
   position: relative;
 
-  height: calc(100vh - var(--topbarH));
-  height: calc(100dvh - var(--topbarH));
+  height: 100vh;
+  height: 100dvh;
 
   box-sizing: border-box;
   scroll-snap-align: start;
@@ -273,7 +268,7 @@ li{ margin: 6px 0; }
   align-items: center;
 
   /* since snapRoot starts below the topbar, we only need spacing, not topbar height */
-  padding: 44px 18px 0 18px;
+  padding: calc(var(--topbarH) + 44px) 18px 0 18px;
 
   isolation: isolate;
   overflow: hidden;
