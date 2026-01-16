@@ -489,6 +489,7 @@
     seekToMs = 0,
     endHoldMs = 0,
     audioTarget = 0.85,
+    cutMs = 0, // <-- add this line
   } = {}) {
     if (!ssVideo || !ssAudio) return;
     if (!screensaverRunning) return;
@@ -585,7 +586,8 @@
         ? ssVideo.duration * 1000
         : 8000;
 
-    const fadeStartMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
+    // --- MODIFIED LINE ---
+    const fadeStartMs = Math.max(0, durationMs - fadeOutMs - safetyMs - (cutMs || 0));
     await sleep(fadeStartMs);
 
     if (!screensaverRunning) return;
@@ -620,12 +622,13 @@
       await playStep({
         videoFile: "Screensaver_2.mp4",
         audioFile: "Blender_Hyperspace_Jump.mp3",
-        fadeInMs: 650,
+        fadeInMs: 0,
         fadeOutMs: 650,
         audioLeadMs: 120,
         videoFadeInDelayMs: 0,
         seekToMs: 80,  // tweak 60–120 if you see a black start
         endHoldMs: 120,
+        cutMs: 3000,   // <-- add this line to cut last 3 seconds
       });
       if (!screensaverRunning) return;
 
