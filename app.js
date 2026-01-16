@@ -238,13 +238,25 @@
   let galleryInterval = null;
   let galleryPaused = false;
 
-  function showGalleryImg(idx) {
+  // Preload image before showing to avoid flash
+  function preloadImage(src) {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = src;
+    });
+  }
+
+  async function showGalleryImg(idx) {
     if (!galleryImg) return;
     galleryImg.style.opacity = 0;
+    const src = galleryImages[idx];
+    await preloadImage(src);
+    galleryImg.src = src;
     setTimeout(() => {
-      galleryImg.src = galleryImages[idx];
       galleryImg.style.opacity = 1;
-    }, 250);
+    }, 30); // Short delay to ensure src is set before fade in
   }
 
   function nextGalleryImg() {
@@ -384,7 +396,13 @@
     ssAudio.load();
 
     // Start video first (muted) so it can buffer
-    try { await ssVideo.play(); } catch (_) {}
+    try { 
+      await ssVideo.play(); 
+    } catch (e) {
+      // Try to play muted if autoplay is blocked
+      ssVideo.muted = true;
+      try { await ssVideo.play(); } catch (_) {}
+    }
 
     // Optional: start audio slightly before video becomes visible
     if (audioLeadMs > 0) {
