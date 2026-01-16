@@ -338,11 +338,11 @@
   /* =========================================================
      Screensaver (Easter Egg)
      Uses:
-       - video files in /video/
-       - audio files in /assets/audio/
+       - video files in /assets/screensavers/
+       - audio files in /assets/screensavers/
      ========================================================= */
-  const VIDEO_DIR = "video/";
-  const AUDIO_DIR = "assets/audio/";
+  const VIDEO_DIR = "assets/screensavers/";
+  const AUDIO_DIR = "assets/screensavers/";
 
   const eggBtn = document.getElementById("easterEgg");
   const ssModal = document.getElementById("screensaverModal");
