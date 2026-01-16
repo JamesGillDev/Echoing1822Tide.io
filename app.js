@@ -233,6 +233,10 @@
   const galleryImg = document.getElementById("galleryImg");
   const galleryPrev = document.getElementById("galleryPrev");
   const galleryNext = document.getElementById("galleryNext");
+  const imageGallery = document.getElementById("imageGallery");
+
+  let galleryInterval = null;
+  let galleryPaused = false;
 
   function showGalleryImg(idx) {
     if (!galleryImg) return;
@@ -243,24 +247,103 @@
     }, 250);
   }
 
+  function nextGalleryImg() {
+    galleryIdx = (galleryIdx + 1) % galleryImages.length;
+    showGalleryImg(galleryIdx);
+  }
+
+  function prevGalleryImg() {
+    galleryIdx = (galleryIdx - 1 + galleryImages.length) % galleryImages.length;
+    showGalleryImg(galleryIdx);
+  }
+
+  function startGalleryAutoScroll() {
+    if (galleryInterval) clearInterval(galleryInterval);
+    galleryInterval = setInterval(() => {
+      if (!galleryPaused) nextGalleryImg();
+    }, 2000);
+  }
+
+  function pauseGalleryAutoScroll() {
+    galleryPaused = true;
+  }
+
+  function resumeGalleryAutoScroll() {
+    galleryPaused = false;
+  }
+
   if (galleryPrev && galleryNext && galleryImg) {
     galleryPrev.addEventListener("click", () => {
-      galleryIdx = (galleryIdx - 1 + galleryImages.length) % galleryImages.length;
-      showGalleryImg(galleryIdx);
+      prevGalleryImg();
+      pauseGalleryAutoScroll();
     });
     galleryNext.addEventListener("click", () => {
-      galleryIdx = (galleryIdx + 1) % galleryImages.length;
-      showGalleryImg(galleryIdx);
+      nextGalleryImg();
+      pauseGalleryAutoScroll();
     });
+
+    // Pause auto-scroll on hover/focus, resume on leave/blur
+    [galleryImg, galleryPrev, galleryNext, imageGallery].forEach((el) => {
+      if (!el) return;
+      el.addEventListener("mouseenter", pauseGalleryAutoScroll);
+      el.addEventListener("mouseleave", resumeGalleryAutoScroll);
+      el.addEventListener("focusin", pauseGalleryAutoScroll);
+      el.addEventListener("focusout", resumeGalleryAutoScroll);
+    });
+
     document.addEventListener("keydown", (e) => {
       if (e.key === "ArrowLeft") {
-        galleryIdx = (galleryIdx - 1 + galleryImages.length) % galleryImages.length;
-        showGalleryImg(galleryIdx);
+        prevGalleryImg();
+        pauseGalleryAutoScroll();
       } else if (e.key === "ArrowRight") {
-        galleryIdx = (galleryIdx + 1) % galleryImages.length;
-        showGalleryImg(galleryIdx);
+        nextGalleryImg();
+        pauseGalleryAutoScroll();
       }
     });
+
     showGalleryImg(galleryIdx);
+    startGalleryAutoScroll();
+  }
+
+  // === Screensaver / Easter Egg Logic ===
+  const eggBtn = document.getElementById("easterEgg");
+  const screensaverModal = document.getElementById("screensaverModal");
+  const ssVideo = document.getElementById("ssVideo");
+  const ssAudio = document.getElementById("ssAudio");
+
+  if (eggBtn && screensaverModal && ssVideo) {
+    // Set your video and audio sources here
+    ssVideo.src = "assets/screensaver/screensaver.mp4"; // <-- update path if needed
+    ssAudio.src = "assets/screensaver/screensaver.mp3"; // <-- update path if needed
+
+    // Open modal and play screensaver
+    eggBtn.addEventListener("click", () => {
+      screensaverModal.classList.add("open");
+      screensaverModal.setAttribute("aria-hidden", "false");
+      ssVideo.currentTime = 0;
+      ssAudio.currentTime = 0;
+      ssVideo.play();
+      ssAudio.play();
+    });
+
+    // Close modal and pause screensaver
+    function closeScreensaver() {
+      screensaverModal.classList.remove("open");
+      screensaverModal.setAttribute("aria-hidden", "true");
+      ssVideo.pause();
+      ssAudio.pause();
+    }
+
+    // Close on backdrop or close button
+    screensaverModal.querySelectorAll("[data-close]").forEach((el) => {
+      el.addEventListener("click", closeScreensaver);
+    });
+
+    // Optional: close on Escape key
+    document.addEventListener("keydown", (e) => {
+      if (screensaverModal.classList.contains("open") && e.key === "Escape") {
+        closeScreensaver();
+      }
+    });
   }
 })();
