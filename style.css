@@ -673,7 +673,7 @@ li{ margin: 6px 0; }
 
 #rotatingWord {
   display: inline-block;
-  color:darkgreen
+  color: darkgreen;
   transition: opacity 0.35s;
 }
 
