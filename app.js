@@ -3,7 +3,6 @@
 
   const clamp01 = (x) => Math.max(0, Math.min(1, x));
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
   /* =========================================================
      Music (single track)
@@ -36,7 +35,11 @@
     if (!bgMusic) return;
 
     if (bgMusic.paused) {
-      bgMusic.play();
+      try {
+        await bgMusic.play();
+      } catch (_) {
+        // autoplay restrictions can block; UI will stay OFF
+      }
     } else {
       bgMusic.pause();
     }
@@ -51,10 +54,12 @@
     });
   }
 
+  // Initial label
   syncMusicUI();
 
   /* =========================================================
      Scroll snapping: click cue + arrow
+     Fix: scroll inside snapRoot explicitly (not document)
      ========================================================= */
 
   const sections = Array.from(document.querySelectorAll(".snapSection"));
@@ -111,7 +116,8 @@
   });
 
   /* =========================================================
-     Background parallax
+     Background parallax (~50% slower than content)
+     - updates per section using --bgOffset
      ========================================================= */
 
   let parallaxTicking = false;
@@ -195,10 +201,7 @@
 
   sections.forEach((s) => io.observe(s));
 
-  /* =========================================================
-     Rotating hero word
-     ========================================================= */
-
+  // === Rotating hero word ===
   const rotatingWords = [
     "Structure",
     "Clarity",
@@ -228,10 +231,7 @@
     setInterval(rotateHeroWord, 1800);
   }
 
-  /* =========================================================
-     Image Gallery
-     ========================================================= */
-
+  // === Image Gallery ===
   const galleryImages = Array.from({ length: 12 }, (_, i) => `assets/beats/${i + 1}_Website.png`);
   let galleryIdx = 0;
 
@@ -280,8 +280,13 @@
     }, 2000);
   }
 
-  function pauseGalleryAutoScroll() { galleryPaused = true; }
-  function resumeGalleryAutoScroll() { galleryPaused = false; }
+  function pauseGalleryAutoScroll() {
+    galleryPaused = true;
+  }
+
+  function resumeGalleryAutoScroll() {
+    galleryPaused = false;
+  }
 
   if (galleryPrev && galleryNext && galleryImg) {
     galleryPrev.addEventListener("click", () => {
@@ -315,10 +320,9 @@
     startGalleryAutoScroll();
   }
 
-  /* =========================================================
-     Screensaver (Easter Egg)
-     FIX: play() is called immediately before any await
-     ========================================================= */
+  // ---------------------------------------------------------
+  // Screensaver (Easter Egg)
+  // ---------------------------------------------------------
 
   const eggBtn = document.getElementById("easterEgg");
   const ssModal = document.getElementById("screensaverModal");
@@ -328,43 +332,83 @@
 
   let screensaverRunning = false;
 
+  // Try multiple likely folders so path mistakes don’t kill the feature.
+  const SS_VIDEO_DIRS = ["assets/screensavers", "assets/video", "video"];
+  const SS_AUDIO_DIRS = ["assets/screensavers", "assets/audio", "audio"];
+
   function openModal() {
     if (!ssModal) return;
-    document.body.classList.add("modalOpen");
     ssModal.classList.add("open");
     ssModal.setAttribute("aria-hidden", "false");
-  }
-
-  function stopScreensaver() {
-    screensaverRunning = false;
-
-    if (ssVideo) {
-      ssVideo.pause();
-      ssVideo.removeAttribute("src"); // Remove src to avoid flashes
-      ssVideo.load();
-      ssVideo.style.opacity = "0";
-    }
-
-    if (ssAudio) {
-      ssAudio.pause();
-      ssAudio.removeAttribute("src");
-      ssAudio.load();
-      ssAudio.volume = 0;
-    }
   }
 
   function closeModal() {
     if (!ssModal) return;
     ssModal.classList.remove("open");
     ssModal.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("modalOpen");
     stopScreensaver();
+    screensaverRunning = false;
   }
 
   if (ssClose) ssClose.addEventListener("click", closeModal);
-  if (ssModal) ssModal.addEventListener("click", (e) => {
-    if (e.target.classList.contains("modal__backdrop")) closeModal();
-  });
+
+  if (ssModal) {
+    ssModal.addEventListener("click", (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains("modal__backdrop")) {
+        closeModal();
+      }
+    });
+  }
+
+  function waitForMediaReady(mediaEl, timeoutMs = 1200) {
+    return new Promise((resolve) => {
+      if (!mediaEl) return resolve(false);
+
+      let settled = false;
+
+      const done = (ok) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(ok);
+      };
+
+      const onReady = () => done(true);
+      const onError = () => done(false);
+
+      const cleanup = () => {
+        clearTimeout(timer);
+        mediaEl.removeEventListener("canplay", onReady);
+        mediaEl.removeEventListener("loadeddata", onReady);
+        mediaEl.removeEventListener("error", onError);
+      };
+
+      // Some browsers fire loadeddata earlier than canplay
+      mediaEl.addEventListener("canplay", onReady);
+      mediaEl.addEventListener("loadeddata", onReady);
+      mediaEl.addEventListener("error", onError);
+
+      const timer = setTimeout(() => done(mediaEl.readyState >= 2), timeoutMs);
+    });
+  }
+
+  async function pickWorkingSrc(mediaEl, candidates) {
+    if (!mediaEl) return null;
+
+    for (const src of candidates) {
+      mediaEl.pause();
+      mediaEl.removeAttribute("src");
+      mediaEl.load();
+
+      mediaEl.src = src;
+      mediaEl.load();
+
+      const ok = await waitForMediaReady(mediaEl, 1400);
+      if (ok) return src;
+    }
+
+    return null;
+  }
 
   function fadeOpacity(el, from, to, ms) {
     if (!el) return Promise.resolve();
@@ -390,49 +434,19 @@
     });
   }
 
-  function safePlay(mediaEl) {
-    if (!mediaEl) return Promise.resolve();
-    try {
-      const p = mediaEl.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
-      return p || Promise.resolve();
-    } catch {
-      return Promise.resolve();
-    }
-  }
-
-  async function getDurationMs(videoEl, timeoutMs = 1500) {
-    if (!videoEl) return 8000;
-    if (isFinite(videoEl.duration) && videoEl.duration > 0) return videoEl.duration * 1000;
-
-    return new Promise((resolve) => {
-      let done = false;
-      const t = setTimeout(() => {
-        if (done) return;
-        done = true;
-        resolve(8000);
-      }, timeoutMs);
-
-      videoEl.onloadedmetadata = () => {
-        if (done) return;
-        done = true;
-        clearTimeout(t);
-        if (isFinite(videoEl.duration) && videoEl.duration > 0) resolve(videoEl.duration * 1000);
-        else resolve(8000);
-      };
-    });
-  }
-
   async function playStep({
+    // You can pass either file names OR full paths. File names are preferred.
+    videoFile,
+    audioFile,
     videoSrc,
     audioSrc,
+
     fadeInMs = 450,
     fadeOutMs = 450,
     audioLeadMs = 0,
     videoFadeInDelayMs = 0,
   }) {
     if (!ssVideo || !ssAudio) return;
-    if (!screensaverRunning) return;
 
     // Reset
     ssVideo.pause();
@@ -441,54 +455,68 @@
     ssVideo.style.opacity = "0";
     ssAudio.volume = 0;
 
-    ssVideo.src = videoSrc;
-    ssVideo.load();
-
-    ssAudio.src = audioSrc;
-    ssAudio.load();
-
+    // Always keep video muted for autoplay compatibility
     ssVideo.muted = true;
+    ssVideo.playsInline = true;
 
-    openModal();
+    // Ensure modal visible
+    if (ssModal && !ssModal.classList.contains("open")) {
+      openModal();
+    }
 
-    // Wait for video to be ready before playing
-    await new Promise((resolve) => {
-      if (ssVideo.readyState >= 2) return resolve();
-      ssVideo.oncanplay = () => resolve();
-      setTimeout(resolve, 1500); // fallback after 1.5s
-    });
+    // Build candidate paths if we were given file names
+    const videoCandidates = videoSrc
+      ? [videoSrc]
+      : (videoFile ? SS_VIDEO_DIRS.map((d) => `${d}/${videoFile}`) : []);
 
-    // Play video and audio
+    const audioCandidates = audioSrc
+      ? [audioSrc]
+      : (audioFile ? SS_AUDIO_DIRS.map((d) => `${d}/${audioFile}`) : []);
+
+    // Pick working sources
+    const chosenVideo = await pickWorkingSrc(ssVideo, videoCandidates);
+    if (!chosenVideo) {
+      console.warn("Screensaver: video not found. Tried:", videoCandidates);
+      return;
+    }
+
+    const chosenAudio = await pickWorkingSrc(ssAudio, audioCandidates);
+    if (!chosenAudio) {
+      console.warn("Screensaver: audio not found. Tried:", audioCandidates);
+      // We can still play video-only if audio is missing
+      ssAudio.removeAttribute("src");
+      ssAudio.load();
+    }
+
+    // Start video (muted)
     try {
       await ssVideo.play();
     } catch (e) {
-      // Try again after a short delay (some browsers need modal open first)
-      await wait(100);
-      try { await ssVideo.play(); } catch (err) {
-        console.warn("Screensaver video failed to play", err);
-        return;
+      console.warn("Screensaver video failed to play:", e);
+      return;
+    }
+
+    // Start audio (best effort)
+    if (chosenAudio) {
+      try {
+        ssAudio.currentTime = 0;
+        await ssAudio.play();
+      } catch (_) {
+        // autoplay policies may block audio; ignore
       }
     }
 
-    try {
-      ssAudio.currentTime = 0;
-      await ssAudio.play();
-    } catch (_) {}
-
-    if (!screensaverRunning) return;
-
-    if (audioLeadMs > 0) {
+    // Fade in
+    if (audioLeadMs > 0 && chosenAudio) {
       await fadeAudio(ssAudio, 0, 0.85, Math.min(600, fadeInMs));
-      await wait(audioLeadMs);
+      await new Promise((r) => setTimeout(r, audioLeadMs));
     }
 
     if (videoFadeInDelayMs > 0) {
-      await wait(videoFadeInDelayMs);
+      await new Promise((r) => setTimeout(r, videoFadeInDelayMs));
     }
 
-    if (!screensaverRunning) return;
-
-    if (audioLeadMs <= 0) {
+    if (chosenAudio && audioLeadMs <= 0) {
       await Promise.all([
         fadeOpacity(ssVideo, 0, 1, fadeInMs),
         fadeAudio(ssAudio, 0, 0.85, fadeInMs),
@@ -497,20 +525,19 @@
       await fadeOpacity(ssVideo, 0, 1, fadeInMs);
     }
 
-    if (!screensaverRunning) return;
-
+    // Wait near end of video, then fade out
     const safetyMs = 250;
-    const durationMs = isFinite(ssVideo.duration) && ssVideo.duration > 0
-      ? ssVideo.duration * 1000
-      : 8000;
-    const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
+    const durationMs =
+      Number.isFinite(ssVideo.duration) && ssVideo.duration > 0
+        ? ssVideo.duration * 1000
+        : 8000;
 
-    await wait(waitMs);
-    if (!screensaverRunning) return;
+    const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
+    await new Promise((r) => setTimeout(r, waitMs));
 
     await Promise.all([
       fadeOpacity(ssVideo, 1, 0, fadeOutMs),
-      fadeAudio(ssAudio, ssAudio.volume, 0, fadeOutMs),
+      chosenAudio ? fadeAudio(ssAudio, ssAudio.volume, 0, fadeOutMs) : Promise.resolve(),
     ]);
 
     ssVideo.pause();
@@ -521,40 +548,63 @@
     if (screensaverRunning) return;
     screensaverRunning = true;
 
+    openModal();
+
     try {
+      // Step 1
       await playStep({
-        videoSrc: "assets/screensavers/Screensaver_1.mp4",
-        audioSrc: "assets/screensavers/Travel_through_space.mp3",
+        videoFile: "Screensaver_1.mp4",
+        audioFile: "Travel_through_space.mp3",
         fadeInMs: 450,
         fadeOutMs: 450,
       });
       if (!screensaverRunning) return;
 
+      // Step 2
       await playStep({
-        videoSrc: "assets/screensavers/Screensaver_2.mp4",
-        audioSrc: "assets/screensavers/Blender_Hyperspace_Jump.mp3",
+        videoFile: "Screensaver_2.mp4",
+        audioFile: "Blender_Hyperspace_Jump.mp3",
         fadeInMs: 450,
         fadeOutMs: 450,
       });
       if (!screensaverRunning) return;
 
+      // Step 3 (slow video fade, audio leads a bit)
       await playStep({
-        videoSrc: "assets/screensavers/Screensaver_3.mp4",
-        audioSrc: "assets/screensavers/Alien_Beach_Waves.mp3",
+        videoFile: "Screensaver_3.mp4",
+        audioFile: "Alien_Beach_Waves.mp3",
         fadeInMs: 5000,
         fadeOutMs: 650,
         audioLeadMs: 700,
         videoFadeInDelayMs: 0,
       });
     } finally {
-      // Always stop/close cleanly
       closeModal();
       screensaverRunning = false;
     }
   }
 
+  function stopScreensaver() {
+    screensaverRunning = false;
+
+    if (ssVideo) {
+      ssVideo.pause();
+      ssVideo.removeAttribute("src");
+      ssVideo.load();
+      ssVideo.style.opacity = "0";
+    }
+
+    if (ssAudio) {
+      ssAudio.pause();
+      ssAudio.removeAttribute("src");
+      ssAudio.load();
+      ssAudio.volume = 0;
+    }
+  }
+
   if (eggBtn) {
-    eggBtn.addEventListener("click", () => {
+    eggBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
       if (!screensaverRunning) runScreensaverSequence();
     });
   }
