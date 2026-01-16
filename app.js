@@ -661,4 +661,34 @@
       runScreensaverSequence();
     });
   }
+
+  // === Rotating hero word ===
+  const rotatingWords = [
+    "Structure",
+    "Clarity",
+    "Systems",
+    "Reliability",
+    "Focus",
+    "Solutions",
+    "Order",
+    "Results",
+    "Simplicity",
+    "Momentum",
+  ];
+  const rotatingWordSpan = document.getElementById("rotatingWord");
+  let rotatingIdx = 0;
+
+  function rotateHeroWord() {
+    if (!rotatingWordSpan) return;
+    rotatingWordSpan.style.opacity = 0;
+    setTimeout(() => {
+      rotatingIdx = (rotatingIdx + 1) % rotatingWords.length;
+      rotatingWordSpan.textContent = rotatingWords[rotatingIdx];
+      rotatingWordSpan.style.opacity = 1;
+    }, 350);
+  }
+
+  if (rotatingWordSpan) {
+    setInterval(rotateHeroWord, 1800); // Change word every 1.8 seconds
+  }
 })();

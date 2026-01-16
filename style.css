@@ -24,15 +24,18 @@
 }
 
 *{ box-sizing: border-box; }
-html, body{ height: 100%; }
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent body scroll */
+}
 
 body{
-  margin: 0;
   background: var(--bg);
   color: var(--ink);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   line-height: 1.5;
-  overflow: hidden; /* snapRoot owns scroll */
 }
 
 a{ color: inherit; text-decoration: none; }
@@ -216,8 +219,9 @@ li{ margin: 6px 0; }
 
 .snapRoot{
   position: relative;
-  height: 100vh;
+  height: 100dvh; /* Use dynamic viewport height */
   overflow-y: auto;
+  overflow-x: hidden;
   scroll-snap-type: y mandatory;
   scroll-snap-stop: always;
   scroll-behavior: smooth;
@@ -227,14 +231,14 @@ li{ margin: 6px 0; }
 
 .snapSection{
   position: relative;
-  height: 100vh;
+  height: 100dvh;
+  box-sizing: border-box;
   scroll-snap-align: start;
   display: grid;
   align-items: center;
-  padding: calc(var(--topbarH) + 44px) 18px 70px 18px;
+  padding: calc(var(--topbarH) + 44px) 18px 0 18px; /* Remove or reduce bottom padding */
   isolation: isolate;
-  overflow: hidden; /* clips parallax backgrounds cleanly */
-  /* Add a stacking context for border blending */
+  overflow: hidden;
   z-index: 0;
 }
 
@@ -641,4 +645,9 @@ li{ margin: 6px 0; }
 @media (prefers-reduced-motion: reduce){
   .snapRoot{ scroll-behavior: auto; }
   #introOverlay{ display: none; }
+}
+
+#rotatingWord {
+  display: inline-block;
+  transition: opacity 0.35s;
 }
