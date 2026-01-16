@@ -1,4 +1,4 @@
-(async () => {
+(() => {
   const snapRoot = document.getElementById("snapRoot");
 
   const clamp01 = (x) => Math.max(0, Math.min(1, x));
@@ -19,16 +19,13 @@
     musicToggle.setAttribute("aria-pressed", on ? "true" : "false");
   }
 
-  // --- Move event listeners and setup out of syncMusicUI ---
   if (bgMusic && musicVol) {
     bgMusic.volume = Number(musicVol.value || 0.25);
 
     musicVol.addEventListener("input", () => {
       bgMusic.volume = Number(musicVol.value);
     });
-  }
 
-  if (bgMusic) {
     bgMusic.addEventListener("play", syncMusicUI);
     bgMusic.addEventListener("pause", syncMusicUI);
     bgMusic.addEventListener("ended", syncMusicUI);
@@ -337,391 +334,266 @@
   let screensaverRunning = false;
 
   // Try multiple likely folders so path mistakes don’t kill the feature.
-// Put these near the top of your screensaver section (or near playStep)
-const VIDEO_DIR = "assets/screensavers/"; // adjust if yours is different
-const AUDIO_DIR = "assets/screensavers/"; // adjust if yours is different
+  const SS_VIDEO_DIRS = ["assets/screensavers"];
+  const SS_AUDIO_DIRS = ["assets/screensavers"];
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  function openModal() {
+    if (!ssModal) return;
+    ssModal.classList.add("open");
+    ssModal.setAttribute("aria-hidden", "false");
+  }
 
-function waitForEvent(el, eventName, timeoutMs = 2500) {
-  return new Promise((resolve) => {
-    if (!el) return resolve(false);
+  function closeModal() {
+    if (!ssModal) return;
+    ssModal.classList.remove("open");
+    ssModal.setAttribute("aria-hidden", "true");
+    stopScreensaver();
+    screensaverRunning = false;
+  }
 
-    let done = false;
-    const onDone = () => {
-      if (done) return;
-      done = true;
-      cleanup();
-      resolve(true);
-    };
+  if (ssClose) ssClose.addEventListener("click", closeModal);
 
-    const t = window.setTimeout(() => {
-      if (done) return;
-      done = true;
-      cleanup();
-      resolve(false);
-    }, timeoutMs);
-
-    const cleanup = () => {
-      window.clearTimeout(t);
-      el.removeEventListener(eventName, onDone);
-    };
-
-    el.addEventListener(eventName, onDone, { once: true });
-  });
-}
-
-// Wait until the first frame is actually available.
-// This is the #1 fix for "flash then disappear" / black frame peeks.
-async function waitForFirstFrame(video, timeoutMs = 2500) {
-  if (!video) return false;
-
-  // If requestVideoFrameCallback exists, it's the cleanest signal
-  if (typeof video.requestVideoFrameCallback === "function") {
-    return new Promise((resolve) => {
-      let done = false;
-
-      const t = window.setTimeout(() => {
-        if (done) return;
-        done = true;
-        resolve(false);
-      }, timeoutMs);
-
-      video.requestVideoFrameCallback(() => {
-        if (done) return;
-        done = true;
-        window.clearTimeout(t);
-        resolve(true);
-      });
+  if (ssModal) {
+    ssModal.addEventListener("click", (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains("modal__backdrop")) {
+        closeModal();
+      }
     });
   }
 
-  // Fallback: loadeddata usually means the first frame is decoded
-  if (video.readyState >= 2) return true;
-  return waitForEvent(video, "loadeddata", timeoutMs);
-}
+  function waitForMediaReady(mediaEl, timeoutMs = 1200) {
+    return new Promise((resolve) => {
+      if (!mediaEl) return resolve(false);
 
-function fadeOpacity(el, from, to, ms) {
-  if (!el) return Promise.resolve();
-  el.style.opacity = String(from);
-  el.style.transition = `opacity ${ms}ms ease`;
-  requestAnimationFrame(() => (el.style.opacity = String(to)));
-  return sleep(ms);
-}
+      let settled = false;
 
-function fadeAudio(audio, from, to, ms) {
-  if (!audio) return Promise.resolve();
-  const start = performance.now();
-  audio.volume = from;
+      const done = (ok) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(ok);
+      };
 
-  return new Promise((resolve) => {
-    function tick(now) {
-      const t = Math.min(1, (now - start) / ms);
-      audio.volume = from + (to - from) * t;
-      if (t < 1) requestAnimationFrame(tick);
-      else resolve();
+      const onReady = () => done(true);
+      const onError = () => done(false);
+
+      const cleanup = () => {
+        clearTimeout(timer);
+        mediaEl.removeEventListener("canplay", onReady);
+        mediaEl.removeEventListener("loadeddata", onReady);
+        mediaEl.removeEventListener("error", onError);
+      };
+
+      // Some browsers fire loadeddata earlier than canplay
+      mediaEl.addEventListener("canplay", onReady);
+      mediaEl.addEventListener("loadeddata", onReady);
+      mediaEl.addEventListener("error", onError);
+
+      const timer = setTimeout(() => done(mediaEl.readyState >= 2), timeoutMs);
+    });
+  }
+
+  async function pickWorkingSrc(mediaEl, candidates) {
+    if (!mediaEl) return null;
+
+    for (const src of candidates) {
+      mediaEl.pause();
+      mediaEl.removeAttribute("src");
+      mediaEl.load();
+
+      mediaEl.src = src;
+      mediaEl.load();
+
+      const ok = await waitForMediaReady(mediaEl, 1400);
+      if (ok) return src;
     }
-    requestAnimationFrame(tick);
-  });
-}
 
-// Define the directories for candidate search
-const SS_VIDEO_DIRS = [
-  "assets/screensavers",
-  "screensavers",
-  "assets",
-  "",
-];
-const SS_AUDIO_DIRS = [
-  "assets/screensavers",
-  "screensavers",
-  "assets",
-  "",
-];
+    return null;
+  }
 
-// Helper to pick the first working src from a list
-async function pickWorkingSrc(mediaEl, candidates) {
-  for (const src of candidates) {
-    mediaEl.src = src;
-    try {
-      await waitForEvent(mediaEl, "loadedmetadata", 1200);
-      if (mediaEl.duration && isFinite(mediaEl.duration)) {
-        return src;
+  function fadeOpacity(el, from, to, ms) {
+    if (!el) return Promise.resolve();
+    el.style.opacity = String(from);
+    el.style.transition = `opacity ${ms}ms ease`;
+    requestAnimationFrame(() => (el.style.opacity = String(to)));
+    return new Promise((r) => setTimeout(r, ms));
+  }
+
+  function fadeAudio(audio, from, to, ms) {
+    if (!audio) return Promise.resolve();
+    const start = performance.now();
+    audio.volume = from;
+
+    return new Promise((resolve) => {
+      function tick(now) {
+        const t = Math.min(1, (now - start) / ms);
+        audio.volume = from + (to - from) * t;
+        if (t < 1) requestAnimationFrame(tick);
+        else resolve();
       }
-    } catch (_) {}
-  }
-  return null;
-}
-
-// UPDATED playStep (supports videoFile/audioFile OR videoSrc/audioSrc)
-async function playStep({
-  videoFile,
-  audioFile,
-  videoSrc,
-  audioSrc,
-
-  fadeInMs = 450,
-  fadeOutMs = 450,
-
-  // audioLeadMs: start audio before showing video (dramatic build)
-  audioLeadMs = 0,
-
-  // videoFadeInDelayMs: extra wait before fading video in
-  videoFadeInDelayMs = 0,
-
-  // seekToMs: skip black intro frames (per-video tuning)
-  seekToMs = 0,
-
-  // endHoldMs: hold a bit before fading out (lets moments breathe)
-  endHoldMs = 0,
-
-  // audioTarget: target volume after fade-in
-  audioTarget = 0.85,
-} = {}) {
-  if (!ssVideo || !ssAudio) return;
-
-  // Build candidate paths if we were given file names
-  const videoCandidates = videoSrc
-    ? [videoSrc]
-    : (videoFile ? SS_VIDEO_DIRS.map((d) => `${d}/${videoFile}`) : []);
-
-  const audioCandidates = audioSrc
-    ? [audioSrc]
-    : (audioFile ? SS_AUDIO_DIRS.map((d) => `${d}/${audioFile}`) : []);
-
-  // Pick working sources
-  const chosenVideo = await pickWorkingSrc(ssVideo, videoCandidates);
-  if (!chosenVideo) {
-    console.warn("Screensaver: video not found. Tried:", videoCandidates);
-    return;
+      requestAnimationFrame(tick);
+    });
   }
 
-  const chosenAudio = await pickWorkingSrc(ssAudio, audioCandidates);
-  if (!chosenAudio) {
-    console.warn("Screensaver: audio not found. Tried:", audioCandidates);
-    // We can still play video-only if audio is missing
-    ssAudio.removeAttribute("src");
-    ssAudio.load();
-  }
+  async function playStep({
+    // You can pass either file names OR full paths. File names are preferred.
+    videoFile,
+    audioFile,
+    videoSrc,
+    audioSrc,
 
-  // Reset state
-  ssVideo.pause();
-  ssAudio.pause();
+    fadeInMs = 450,
+    fadeOutMs = 450,
+    audioLeadMs = 0,
+    videoFadeInDelayMs = 0,
+  }) {
+    if (!ssVideo || !ssAudio) return;
 
-  ssVideo.style.opacity = "0";
-  ssAudio.volume = 0;
+    // Reset
+    ssVideo.pause();
+    ssAudio.pause();
 
-  ssVideo.src = chosenVideo;
-  ssVideo.load();
+    ssVideo.style.opacity = "0";
+    ssAudio.volume = 0;
 
-  if (chosenAudio) {
-    ssAudio.src = chosenAudio;
-    ssAudio.load();
-  }
+    // Always keep video muted for autoplay compatibility
+    ssVideo.muted = true;
+    ssVideo.playsInline = true;
 
-  // Autoplay safety
-  ssVideo.muted = true;
-  ssVideo.playsInline = true;
-
-  // Ensure media metadata is available (duration, seeking, etc.)
-  await waitForEvent(ssVideo, "loadedmetadata", 2500);
-  if (chosenAudio) await waitForEvent(ssAudio, "canplay", 2500);
-
-  // Seek past black/empty intro if requested
-  if (seekToMs > 0 && isFinite(ssVideo.duration) && ssVideo.duration > 0) {
-    try {
-      ssVideo.currentTime = Math.min(ssVideo.duration - 0.05, seekToMs / 1000);
-    } catch (_) {}
-  }
-
-  // Start video (muted)
-  try {
-    await ssVideo.play();
-  } catch (e) {
-    console.warn("Screensaver video failed to play:", e);
-    return;
-  }
-
-  // Wait for first decoded frame before showing anything
-  await waitForFirstFrame(ssVideo, 2500);
-
-  // Start audio (best effort)
-  if (chosenAudio) {
-    try {
-      ssAudio.currentTime = 0;
-      await ssAudio.play();
-    } catch (_) {
-      // autoplay policies may block audio; ignore
+    // Ensure modal visible
+    if (ssModal && !ssModal.classList.contains("open")) {
+      openModal();
     }
-  }
 
-  // Fade in
-  if (audioLeadMs > 0 && chosenAudio) {
-    await fadeAudio(ssAudio, 0, audioTarget, Math.min(600, fadeInMs));
-    await sleep(audioLeadMs);
-  }
+    // Build candidate paths if we were given file names
+    const videoCandidates = videoSrc
+      ? [videoSrc]
+      : (videoFile ? SS_VIDEO_DIRS.map((d) => `${d}/${videoFile}`) : []);
 
-  if (videoFadeInDelayMs > 0) {
-    await sleep(videoFadeInDelayMs);
-  }
+    const audioCandidates = audioSrc
+      ? [audioSrc]
+      : (audioFile ? SS_AUDIO_DIRS.map((d) => `${d}/${audioFile}`) : []);
 
-  if (chosenAudio && audioLeadMs <= 0) {
-    await Promise.all([
-      fadeOpacity(ssVideo, 0, 1, fadeInMs),
-      fadeAudio(ssAudio, 0, audioTarget, fadeInMs),
-    ]);
-  } else {
-    await fadeOpacity(ssVideo, 0, 1, fadeInMs);
-  }
-
-  if (endHoldMs > 0) {
-    await sleep(endHoldMs);
-  }
-
-  // Wait near end of video, then fade out
-  const safetyMs = 250;
-  const durationMs =
-    Number.isFinite(ssVideo.duration) && ssVideo.duration > 0
-      ? ssVideo.duration * 1000
-      : 8000;
-
-  const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
-  await sleep(waitMs);
-
-  await Promise.all([
-    fadeOpacity(ssVideo, 1, 0, fadeOutMs),
-    chosenAudio ? fadeAudio(ssAudio, ssAudio.volume, 0, fadeOutMs) : Promise.resolve(),
-  ]);
-
-  ssVideo.pause();
-  ssAudio.pause();
-}
-
-  // Build candidate paths if we were given file names
-  const videoCandidates = videoSrc
-    ? [videoSrc]
-    : (videoFile ? SS_VIDEO_DIRS.map((d) => `${d}/${videoFile}`) : []);
-
-  const audioCandidates = audioSrc
-    ? [audioSrc]
-    : (audioFile ? SS_AUDIO_DIRS.map((d) => `${d}/${audioFile}`) : []);
-
-  // Pick working sources
-  const chosenVideo = await pickWorkingSrc(ssVideo, videoCandidates);
-  if (!chosenVideo) {
-    console.warn("Screensaver: video not found. Tried:", videoCandidates);
-    return;
-  }
-
-  const chosenAudio = await pickWorkingSrc(ssAudio, audioCandidates);
-  if (!chosenAudio) {
-    console.warn("Screensaver: audio not found. Tried:", audioCandidates);
-    // We can still play video-only if audio is missing
-    ssAudio.removeAttribute("src");
-    ssAudio.load();
-  }
-
-  // Start video (muted)
-  try {
-    await ssVideo.play();
-  } catch (e) {
-    console.warn("Screensaver video failed to play:", e);
-    return;
-  }
-
-  // Start audio (best effort)
-  if (chosenAudio) {
-    try {
-      ssAudio.currentTime = 0;
-      await ssAudio.play();
-    } catch (_) {
-      // autoplay policies may block audio; ignore
+    // Pick working sources
+    const chosenVideo = await pickWorkingSrc(ssVideo, videoCandidates);
+    if (!chosenVideo) {
+      console.warn("Screensaver: video not found. Tried:", videoCandidates);
+      return;
     }
-  }
 
-  // Fade in
-  if (audioLeadMs > 0 && chosenAudio) {
-    await fadeAudio(ssAudio, 0, 0.85, Math.min(600, fadeInMs));
-    await new Promise((r) => setTimeout(r, audioLeadMs));
-  }
+    const chosenAudio = await pickWorkingSrc(ssAudio, audioCandidates);
+    if (!chosenAudio) {
+      console.warn("Screensaver: audio not found. Tried:", audioCandidates);
+      // We can still play video-only if audio is missing
+      ssAudio.removeAttribute("src");
+      ssAudio.load();
+    }
 
-  if (videoFadeInDelayMs > 0) {
-    await new Promise((r) => setTimeout(r, videoFadeInDelayMs));
-  }
+    // Start video (muted)
+    try {
+      await ssVideo.play();
+    } catch (e) {
+      console.warn("Screensaver video failed to play:", e);
+      return;
+    }
 
-  if (chosenAudio && audioLeadMs <= 0) {
+    // Start audio (best effort)
+    if (chosenAudio) {
+      try {
+        ssAudio.currentTime = 0;
+        await ssAudio.play();
+      } catch (_) {
+        // autoplay policies may block audio; ignore
+      }
+    }
+
+    // Fade in
+    if (audioLeadMs > 0 && chosenAudio) {
+      await fadeAudio(ssAudio, 0, 0.85, Math.min(600, fadeInMs));
+      await new Promise((r) => setTimeout(r, audioLeadMs));
+    }
+
+    if (videoFadeInDelayMs > 0) {
+      await new Promise((r) => setTimeout(r, videoFadeInDelayMs));
+    }
+
+    if (chosenAudio && audioLeadMs <= 0) {
+      await Promise.all([
+        fadeOpacity(ssVideo, 0, 1, fadeInMs),
+        fadeAudio(ssAudio, 0, 0.85, fadeInMs),
+      ]);
+    } else {
+      await fadeOpacity(ssVideo, 0, 1, fadeInMs);
+    }
+
+    // Wait near end of video, then fade out
+    const safetyMs = 250;
+    const durationMs =
+      Number.isFinite(ssVideo.duration) && ssVideo.duration > 0
+        ? ssVideo.duration * 1000
+        : 8000;
+
+    const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
+    await new Promise((r) => setTimeout(r, waitMs));
+
     await Promise.all([
-      fadeOpacity(ssVideo, 0, 1, fadeInMs),
-      fadeAudio(ssAudio, 0, 0.85, fadeInMs),
+      fadeOpacity(ssVideo, 1, 0, fadeOutMs),
+      chosenAudio ? fadeAudio(ssAudio, ssAudio.volume, 0, fadeOutMs) : Promise.resolve(),
     ]);
-  } else {
-    await fadeOpacity(ssVideo, 0, 1, fadeInMs);
+
+    ssVideo.pause();
+    ssAudio.pause();
   }
-
-  // Wait near end of video, then fade out
-  const safetyMs = 250;
-  const durationMs =
-    Number.isFinite(ssVideo.duration) && ssVideo.duration > 0
-      ? ssVideo.duration * 1000
-      : 8000;
-
-  const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
-  await new Promise((r) => setTimeout(r, waitMs));
-
-  await Promise.all([
-    fadeOpacity(ssVideo, 1, 0, fadeOutMs),
-    chosenAudio ? fadeAudio(ssAudio, ssAudio.volume, 0, fadeOutMs) : Promise.resolve(),
-  ]);
-
-  ssVideo.pause();
-  ssAudio.pause();
 
   async function runScreensaverSequence() {
+    if (screensaverRunning) return;
     screensaverRunning = true;
-    openModal();
 
-    try {
-      // Step 1 — clean, confident intro
-      await playStep({
-        videoFile: "Screensaver_1.mp4",
-        audioFile: "Travel_through_space.mp3",
-        fadeInMs: 550,
-        fadeOutMs: 550,
-        audioLeadMs: 0,
-        videoFadeInDelayMs: 0,
-        seekToMs: 0,
-        endHoldMs: 150,
-      });
-      if (!screensaverRunning) return;
+  openModal();
 
-      // Step 2 — “jump” moment: tighter sync, skip black lead-in if present
-      await playStep({
-        videoFile: "Screensaver_2.mp4",
-        audioFile: "Blender_Hyperspace_Jump.mp3",
-        fadeInMs: 650,
-        fadeOutMs: 650,
-        audioLeadMs: 120,         // tiny lead makes the jump feel intentional
-        videoFadeInDelayMs: 0,    // no need now that we wait for first frame
-        seekToMs: 80,             // adjust 60–120 if you still see a black start
-        endHoldMs: 120,
-      });
-      if (!screensaverRunning) return;
+  try {
+    // Step 1 — clean, confident intro
+    await playStep({
+      videoFile: "Screensaver_1.mp4",
+      audioFile: "Travel_through_space.mp3",
+      fadeInMs: 550,
+      fadeOutMs: 550,
+      audioLeadMs: 0,
+      videoFadeInDelayMs: 0,
+      seekToMs: 0,
+      endHoldMs: 150,
+    });
+    if (!screensaverRunning) return;
 
-      // Step 3 — dreamy, slow reveal
-      await playStep({
-        videoFile: "Screensaver_3.mp4",
-        audioFile: "Alien_Beach_Waves.mp3",
-        fadeInMs: 6000,
-        fadeOutMs: 750,
-        audioLeadMs: 700,
-        videoFadeInDelayMs: 0,
-        seekToMs: 0,
-        endHoldMs: 350,
-      });
-    } finally {
-      closeModal();
-      screensaverRunning = false;
-    }
+    // Step 2 — “jump” moment: tighter sync, skip black lead-in if present
+    await playStep({
+      videoFile: "Screensaver_2.mp4",
+      audioFile: "Blender_Hyperspace_Jump.mp3",
+      fadeInMs: 650,
+      fadeOutMs: 650,
+      audioLeadMs: 120,         // tiny lead makes the jump feel intentional
+      videoFadeInDelayMs: 0,    // no need now that we wait for first frame
+      seekToMs: 80,             // adjust 60–120 if you still see a black start
+      endHoldMs: 120,
+    });
+    if (!screensaverRunning) return;
+
+    // Step 3 — dreamy, slow reveal
+    await playStep({
+      videoFile: "Screensaver_3.mp4",
+      audioFile: "Alien_Beach_Waves.mp3",
+      fadeInMs: 6000,
+      fadeOutMs: 750,
+      audioLeadMs: 700,
+      videoFadeInDelayMs: 0,
+      seekToMs: 0,
+      endHoldMs: 350,
+    });
+  } finally {
+    closeModal();
+    screensaverRunning = false;
+  }
+
   }
 
   function stopScreensaver() {
@@ -748,4 +620,4 @@ async function playStep({
       if (!screensaverRunning) runScreensaverSequence();
     });
   }
-})()
+})();
