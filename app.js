@@ -67,18 +67,26 @@
     const ctx = introCanvas.getContext("2d", { alpha: true });
     if (!ctx) return hideIntro();
 
-    const frames = Array.from({ length: 12 }, (_, i) => `assets/beats/${i + 1}_Website.png`);
+    const frames = Array.from(
+      { length: 12 },
+      (_, i) => `assets/beats/${i + 1}_Website.png`,
+    );
     const frameMs = 3500;
     const fadeFrac = 0.18; // 18% of duration for fade in/out
     const fadeMs = frameMs * fadeFrac;
 
     // Preload
-    const images = await Promise.all(frames.map(src => new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
-      img.src = src;
-    })));
+    const images = await Promise.all(
+      frames.map(
+        (src) =>
+          new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = src;
+          }),
+      ),
+    );
 
     const usable = images.filter(Boolean);
     if (usable.length < 3) {
@@ -110,7 +118,7 @@
         if (t < 0 || t > 1) continue;
 
         // Scale: from 5% to 70%
-        const scale = lerp(0.05, 0.70, t);
+        const scale = lerp(0.05, 0.7, t);
 
         // Alpha: fade in at start, fade out at end
         let alpha = 1;
@@ -153,7 +161,9 @@
   // }
 
   // Instead, play intro when music button is clicked
-  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduceMotion =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduceMotion) hideIntro();
 
   /* =========================================================
@@ -251,8 +261,23 @@
     // Deterministic: scroll snapRoot to section's offsetTop
     snapRoot.scrollTo({
       top: section.offsetTop,
-      behavior: "smooth"
+      behavior: "smooth",
     });
+  }
+
+  function smoothScrollTo(target, duration = 700) {
+    const start = document.querySelector(".snapRoot").scrollTop;
+    const end = target.offsetTop;
+    const change = end - start;
+    const startTime = performance.now();
+
+    function animateScroll(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      document.querySelector(".snapRoot").scrollTop = start + change * progress;
+      if (progress < 1) requestAnimationFrame(animateScroll);
+    }
+    requestAnimationFrame(animateScroll);
   }
 
   function scrollToNext(fromSection) {
@@ -263,7 +288,7 @@
     scrollToSection(next);
   }
 
-  document.querySelectorAll("[data-scroll-next]").forEach(el => {
+  document.querySelectorAll("[data-scroll-next]").forEach((el) => {
     const section = el.closest(".snapSection");
     if (!section) return;
 
@@ -277,7 +302,7 @@
   });
 
   // Make nav anchors scroll inside snapRoot (instead of document)
-  navLinks.forEach(a => {
+  navLinks.forEach((a) => {
     a.addEventListener("click", (e) => {
       const href = a.getAttribute("href");
       if (!href || !href.startsWith("#")) return;
@@ -306,8 +331,8 @@
     const st = snapRoot.scrollTop;
 
     // 50% “lag” feel. Clamp so it never gets ridiculous.
-    sections.forEach(sec => {
-      const rel = st - sec.offsetTop;     // 0 when perfectly snapped
+    sections.forEach((sec) => {
+      const rel = st - sec.offsetTop; // 0 when perfectly snapped
       const offset = clamp(rel * 0.5, -360, 360);
       sec.style.setProperty("--bgOffset", `${offset}px`);
     });
@@ -316,11 +341,15 @@
   }
 
   if (snapRoot) {
-    snapRoot.addEventListener("scroll", () => {
-      if (parallaxTicking) return;
-      parallaxTicking = true;
-      requestAnimationFrame(updateParallax);
-    }, { passive: true });
+    snapRoot.addEventListener(
+      "scroll",
+      () => {
+        if (parallaxTicking) return;
+        parallaxTicking = true;
+        requestAnimationFrame(updateParallax);
+      },
+      { passive: true },
+    );
 
     // Initial
     updateParallax();
@@ -331,7 +360,9 @@
      ========================================================= */
 
   function setActiveNav(id) {
-    navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === `#${id}`));
+    navLinks.forEach((a) =>
+      a.classList.toggle("active", a.getAttribute("href") === `#${id}`),
+    );
   }
 
   const swapTimers = new WeakMap();
@@ -345,7 +376,8 @@
 
   function scheduleSwap(section) {
     // Only sections that have bgB should swap
-    const hasBgB = getComputedStyle(section).getPropertyValue("--bgB").trim().length > 0;
+    const hasBgB =
+      getComputedStyle(section).getPropertyValue("--bgB").trim().length > 0;
     const flagged = section.hasAttribute("data-bg2");
     if (!hasBgB || !flagged) return;
 
@@ -356,22 +388,25 @@
     swapTimers.set(section, t);
   }
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      const section = entry.target;
-      if (!section || !section.id) return;
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const section = entry.target;
+        if (!section || !section.id) return;
 
-      if (entry.isIntersecting) {
-        setActiveNav(section.id);
-        clearSwap(section);
-        scheduleSwap(section);
-      } else {
-        clearSwap(section);
-      }
-    });
-  }, { root: snapRoot || null, threshold: 0.60 });
+        if (entry.isIntersecting) {
+          setActiveNav(section.id);
+          clearSwap(section);
+          scheduleSwap(section);
+        } else {
+          clearSwap(section);
+        }
+      });
+    },
+    { root: snapRoot || null, threshold: 0.6 },
+  );
 
-  sections.forEach(s => io.observe(s));
+  sections.forEach((s) => io.observe(s));
 
   /* =========================================================
      Hidden Screensaver Sequence (Easter egg)
@@ -385,7 +420,8 @@
   const ssVideo = document.getElementById("ssVideo");
   const ssAudio = document.getElementById("ssAudio");
 
-  const qsAll = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const qsAll = (sel, root = document) =>
+    Array.from(root.querySelectorAll(sel));
 
   function openModal() {
     if (!modal) return;
@@ -401,14 +437,16 @@
   }
 
   if (modal) {
-    qsAll("[data-close]", modal).forEach(el => el.addEventListener("click", closeModal));
+    qsAll("[data-close]", modal).forEach((el) =>
+      el.addEventListener("click", closeModal),
+    );
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && modal.classList.contains("open")) closeModal();
     });
   }
 
   function fadeOpacity(el, from, to, ms) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const start = performance.now();
       function tick(now) {
         const t = clamp01((now - start) / ms);
@@ -421,7 +459,7 @@
   }
 
   function fadeAudio(audio, from, to, ms) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const start = performance.now();
       function tick(now) {
         const t = clamp01((now - start) / ms);
@@ -475,7 +513,9 @@
       }
     } else {
       if (bgMusicWasPlaying) {
-        try { await bgMusic.play(); } catch {}
+        try {
+          await bgMusic.play();
+        } catch {}
         bgMusic.volume = bgMusicPrevVol;
         bgMusicWasPlaying = false;
       }
@@ -491,7 +531,7 @@
     fadeOutMs,
     audioLeadMs = 0,
     videoFadeInDelayMs = 0,
-    maxFallbackMs = 9000
+    maxFallbackMs = 9000,
   }) {
     if (!ssVideo || !ssAudio) return;
 
@@ -518,12 +558,13 @@
     await ssAudio.play().catch(() => {});
     if (audioLeadMs > 0) {
       await fadeAudio(ssAudio, 0, 0.85, audioFadeInMs);
-      await new Promise(r => setTimeout(r, audioLeadMs));
+      await new Promise((r) => setTimeout(r, audioLeadMs));
     }
 
     // Video start
     await ssVideo.play().catch(() => {});
-    if (videoFadeInDelayMs > 0) await new Promise(r => setTimeout(r, videoFadeInDelayMs));
+    if (videoFadeInDelayMs > 0)
+      await new Promise((r) => setTimeout(r, videoFadeInDelayMs));
 
     // Fade in
     if (audioLeadMs === 0) {
@@ -539,11 +580,11 @@
     const safetyMs = 240;
     const durationMs =
       Number.isFinite(ssVideo.duration) && ssVideo.duration > 0
-        ? (ssVideo.duration * 1000)
+        ? ssVideo.duration * 1000
         : maxFallbackMs;
 
     const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
-    await new Promise(r => setTimeout(r, waitMs));
+    await new Promise((r) => setTimeout(r, waitMs));
 
     await Promise.all([
       fadeOpacity(ssVideo, 1, 0, fadeOutMs),
@@ -582,11 +623,11 @@
     await playStep({
       videoSrc: "assets/video/Screensaver_3.mp4",
       audioSrc: "assets/audio/Alien_Beach_Waves.mp3",
-      videoFadeInMs: 5000,     // slow visual reveal
-      audioFadeInMs: 380,      // fast audio reveal
+      videoFadeInMs: 5000, // slow visual reveal
+      audioFadeInMs: 380, // fast audio reveal
       fadeOutMs: 650,
-      audioLeadMs: 900,        // audio heard BEFORE beach is seen
-      videoFadeInDelayMs: 650
+      audioLeadMs: 900, // audio heard BEFORE beach is seen
+      videoFadeInDelayMs: 650,
     });
 
     closeModal();
