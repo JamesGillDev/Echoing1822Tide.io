@@ -277,7 +277,7 @@
     if (galleryInterval) clearInterval(galleryInterval);
     galleryInterval = setInterval(() => {
       if (!galleryPaused) nextGalleryImg();
-    }, 5000);
+    }, 2000);
   }
 
   function pauseGalleryAutoScroll() { galleryPaused = true; }
@@ -441,33 +441,33 @@
     ssVideo.style.opacity = "0";
     ssAudio.volume = 0;
 
-    // Set sources
     ssVideo.src = videoSrc;
     ssVideo.load();
 
     ssAudio.src = audioSrc;
     ssAudio.load();
 
-    // Always keep video muted for autoplay compatibility
     ssVideo.muted = true;
 
-    // Make modal visible before playing
     openModal();
 
     // Wait for video to be ready before playing
     await new Promise((resolve) => {
       if (ssVideo.readyState >= 2) return resolve();
       ssVideo.oncanplay = () => resolve();
-      setTimeout(resolve, 1200); // fallback after 1.2s
+      setTimeout(resolve, 1500); // fallback after 1.5s
     });
 
     // Play video and audio
     try {
       await ssVideo.play();
     } catch (e) {
-      // If play fails, skip this step or show a fallback
-      console.warn("Screensaver video failed to play", e);
-      return;
+      // Try again after a short delay (some browsers need modal open first)
+      await wait(100);
+      try { await ssVideo.play(); } catch (err) {
+        console.warn("Screensaver video failed to play", err);
+        return;
+      }
     }
 
     try {
