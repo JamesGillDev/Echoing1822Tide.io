@@ -223,7 +223,7 @@ li{ margin: 6px 0; }
 
 .snapRoot{
   position: relative;
-  height: 100%; /* Use dynamic viewport height */
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-snap-type: y mandatory;
@@ -235,30 +235,30 @@ li{ margin: 6px 0; }
 
 .snapSection{
   position: relative;
-  height: 100dvh;
+  height: 100vh; /* Use viewport height, not dynamic viewport height */
   box-sizing: border-box;
   scroll-snap-align: start;
   display: grid;
   align-items: center;
-  padding: calc(var(--topbarH) + 44px) 18px 0 18px; /* Remove or reduce bottom padding */
+  padding: calc(var(--topbarH) + 44px) 18px 0 18px;
   isolation: isolate;
   overflow: hidden;
   z-index: 0;
 }
 
-/* --- BACKGROUND IMAGE LAYER (stays as-is) --- */
+/* --- BACKGROUND IMAGE LAYER --- */
 .snapSection::before{
   content: "";
   position: absolute;
-  inset: -10% -2%;
-  z-index: -3;                 /* behind everything */
+  inset: 0; /* changed from -10% -2% to 0 so it doesn't bleed */
+  z-index: -3;
   background-image: var(--bgA, none);
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  transform: translate3d(0, var(--bgOffset, 0px), 0) scale(0.98);
+  transform: translate3d(0, var(--bgOffset, 0px), 0) scale(1); /* scale(1) for full coverage */
   will-change: transform;
-  filter: none;                 /* remove blur here; keep image crisp */
+  filter: none;
 }
 
 /* If you do background swap, target ::before (not ::after) */
