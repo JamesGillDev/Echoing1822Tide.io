@@ -224,6 +224,7 @@
       rotatingIdx = (rotatingIdx + 1) % rotatingWords.length;
       rotatingWordSpan.textContent = rotatingWords[rotatingIdx];
       rotatingWordSpan.style.opacity = 1;
+      rotatingWordSpan.style.color = "#145a32"; // dark green representing money
     }, 350);
   }
 
