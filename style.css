@@ -269,13 +269,13 @@ li{ margin: 6px 0; }
   z-index: -1;
   pointer-events: none;
   border-radius: 32px;
-  /* Animated, shifting, blurred gradient border with transparent center */
+  /* Animated, shifting, blurred gradient border with larger transparent center */
   background:
     radial-gradient(circle at 50% 50%,
-      rgba(0,0,0,0) 55%,
-      rgba(54,214,255,0.18) 65%,
-      rgba(155,123,255,0.18) 85%,
-      rgba(54,214,255,0.18) 100%
+      rgba(0,0,0,0) 70%,           /* Increase transparent center to 70% */
+      rgba(54,214,255,0.13) 80%,   /* Make border thinner and more transparent */
+      rgba(155,123,255,0.13) 95%,
+      rgba(54,214,255,0.13) 100%
     ),
     linear-gradient(120deg,
       #36d6ff 0%,
@@ -284,8 +284,8 @@ li{ margin: 6px 0; }
       #9b7bff 75%,
       #36d6ff 100%
     );
-  filter: blur(24px);
-  opacity: 0.7;
+  filter: blur(12px);              /* Reduce blur so it doesn't bleed into center */
+  opacity: 0.55;                   /* Lower opacity for less bleed */
   animation: borderGradientShift 10s linear infinite;
   background-size: 200% 200%;
   background-position: 0% 50%;
