@@ -1,4 +1,4 @@
-(() => {
+(async () => {
   const snapRoot = document.getElementById("snapRoot");
 
   const clamp01 = (x) => Math.max(0, Math.min(1, x));
@@ -12,19 +12,23 @@
   const musicToggle = document.getElementById("musicToggle");
   const musicVol = document.getElementById("musicVol");
 
-  async function syncMusicUI() {
+  function syncMusicUI() {
     if (!bgMusic || !musicToggle) return;
     const on = !bgMusic.paused;
     musicToggle.textContent = on ? "Music: ON" : "Music: OFF";
     musicToggle.setAttribute("aria-pressed", on ? "true" : "false");
+  }
 
+  // --- Move event listeners and setup out of syncMusicUI ---
   if (bgMusic && musicVol) {
     bgMusic.volume = Number(musicVol.value || 0.25);
 
     musicVol.addEventListener("input", () => {
       bgMusic.volume = Number(musicVol.value);
     });
+  }
 
+  if (bgMusic) {
     bgMusic.addEventListener("play", syncMusicUI);
     bgMusic.addEventListener("pause", syncMusicUI);
     bgMusic.addEventListener("ended", syncMusicUI);
@@ -421,6 +425,34 @@ function fadeAudio(audio, from, to, ms) {
   });
 }
 
+// Define the directories for candidate search
+const SS_VIDEO_DIRS = [
+  "assets/screensavers",
+  "screensavers",
+  "assets",
+  "",
+];
+const SS_AUDIO_DIRS = [
+  "assets/screensavers",
+  "screensavers",
+  "assets",
+  "",
+];
+
+// Helper to pick the first working src from a list
+async function pickWorkingSrc(mediaEl, candidates) {
+  for (const src of candidates) {
+    mediaEl.src = src;
+    try {
+      await waitForEvent(mediaEl, "loadedmetadata", 1200);
+      if (mediaEl.duration && isFinite(mediaEl.duration)) {
+        return src;
+      }
+    } catch (_) {}
+  }
+  return null;
+}
+
 // UPDATED playStep (supports videoFile/audioFile OR videoSrc/audioSrc)
 async function playStep({
   videoFile,
@@ -448,8 +480,29 @@ async function playStep({
 } = {}) {
   if (!ssVideo || !ssAudio) return;
 
-  const vSrc = videoSrc || (VIDEO_DIR + videoFile);
-  const aSrc = audioSrc || (AUDIO_DIR + audioFile);
+  // Build candidate paths if we were given file names
+  const videoCandidates = videoSrc
+    ? [videoSrc]
+    : (videoFile ? SS_VIDEO_DIRS.map((d) => `${d}/${videoFile}`) : []);
+
+  const audioCandidates = audioSrc
+    ? [audioSrc]
+    : (audioFile ? SS_AUDIO_DIRS.map((d) => `${d}/${audioFile}`) : []);
+
+  // Pick working sources
+  const chosenVideo = await pickWorkingSrc(ssVideo, videoCandidates);
+  if (!chosenVideo) {
+    console.warn("Screensaver: video not found. Tried:", videoCandidates);
+    return;
+  }
+
+  const chosenAudio = await pickWorkingSrc(ssAudio, audioCandidates);
+  if (!chosenAudio) {
+    console.warn("Screensaver: audio not found. Tried:", audioCandidates);
+    // We can still play video-only if audio is missing
+    ssAudio.removeAttribute("src");
+    ssAudio.load();
+  }
 
   // Reset state
   ssVideo.pause();
@@ -458,11 +511,13 @@ async function playStep({
   ssVideo.style.opacity = "0";
   ssAudio.volume = 0;
 
-  ssVideo.src = vSrc;
+  ssVideo.src = chosenVideo;
   ssVideo.load();
 
-  ssAudio.src = aSrc;
-  ssAudio.load();
+  if (chosenAudio) {
+    ssAudio.src = chosenAudio;
+    ssAudio.load();
+  }
 
   // Autoplay safety
   ssVideo.muted = true;
@@ -470,7 +525,7 @@ async function playStep({
 
   // Ensure media metadata is available (duration, seeking, etc.)
   await waitForEvent(ssVideo, "loadedmetadata", 2500);
-  await waitForEvent(ssAudio, "canplay", 2500);
+  if (chosenAudio) await waitForEvent(ssAudio, "canplay", 2500);
 
   // Seek past black/empty intro if requested
   if (seekToMs > 0 && isFinite(ssVideo.duration) && ssVideo.duration > 0) {
@@ -479,7 +534,7 @@ async function playStep({
     } catch (_) {}
   }
 
-  // Start playback (video first, muted)
+  // Start video (muted)
   try {
     await ssVideo.play();
   } catch (e) {
@@ -490,16 +545,19 @@ async function playStep({
   // Wait for first decoded frame before showing anything
   await waitForFirstFrame(ssVideo, 2500);
 
-  // Optional: start audio early for drama
-  try {
-    ssAudio.currentTime = 0;
-    await ssAudio.play();
-  } catch (_) {
-    // If audio is blocked, we still show video; user gesture usually prevents this anyway
+  // Start audio (best effort)
+  if (chosenAudio) {
+    try {
+      ssAudio.currentTime = 0;
+      await ssAudio.play();
+    } catch (_) {
+      // autoplay policies may block audio; ignore
+    }
   }
 
-  if (audioLeadMs > 0) {
-    await fadeAudio(ssAudio, 0, audioTarget, Math.min(650, fadeInMs));
+  // Fade in
+  if (audioLeadMs > 0 && chosenAudio) {
+    await fadeAudio(ssAudio, 0, audioTarget, Math.min(600, fadeInMs));
     await sleep(audioLeadMs);
   }
 
@@ -507,188 +565,187 @@ async function playStep({
     await sleep(videoFadeInDelayMs);
   }
 
-  // Fade in video + audio (if not already faded)
-  if (audioLeadMs > 0) {
-    await fadeOpacity(ssVideo, 0, 1, fadeInMs);
-  } else {
+  if (chosenAudio && audioLeadMs <= 0) {
     await Promise.all([
       fadeOpacity(ssVideo, 0, 1, fadeInMs),
       fadeAudio(ssAudio, 0, audioTarget, fadeInMs),
     ]);
+  } else {
+    await fadeOpacity(ssVideo, 0, 1, fadeInMs);
   }
 
   if (endHoldMs > 0) {
     await sleep(endHoldMs);
   }
 
-  // Fade out near end of video (more accurate than guessing)
+  // Wait near end of video, then fade out
   const safetyMs = 250;
   const durationMs =
-    isFinite(ssVideo.duration) && ssVideo.duration > 0
+    Number.isFinite(ssVideo.duration) && ssVideo.duration > 0
       ? ssVideo.duration * 1000
       : 8000;
 
-  const fadeStartMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
-  await sleep(fadeStartMs);
+  const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
+  await sleep(waitMs);
 
   await Promise.all([
     fadeOpacity(ssVideo, 1, 0, fadeOutMs),
-    fadeAudio(ssAudio, ssAudio.volume, 0, fadeOutMs),
+    chosenAudio ? fadeAudio(ssAudio, ssAudio.volume, 0, fadeOutMs) : Promise.resolve(),
   ]);
 
   ssVideo.pause();
   ssAudio.pause();
 }
-    // Build candidate paths if we were given file names
-    const videoCandidates = videoSrc
-      ? [videoSrc]
-      : (videoFile ? SS_VIDEO_DIRS.map((d) => `${d}/${videoFile}`) : []);
 
-    const audioCandidates = audioSrc
-      ? [audioSrc]
-      : (audioFile ? SS_AUDIO_DIRS.map((d) => `${d}/${audioFile}`) : []);
+  // Build candidate paths if we were given file names
+  const videoCandidates = videoSrc
+    ? [videoSrc]
+    : (videoFile ? SS_VIDEO_DIRS.map((d) => `${d}/${videoFile}`) : []);
 
-    // Pick working sources
-    const chosenVideo = await pickWorkingSrc(ssVideo, videoCandidates);
-    if (!chosenVideo) {
-      console.warn("Screensaver: video not found. Tried:", videoCandidates);
-      return;
-    }
+  const audioCandidates = audioSrc
+    ? [audioSrc]
+    : (audioFile ? SS_AUDIO_DIRS.map((d) => `${d}/${audioFile}`) : []);
 
-    const chosenAudio = await pickWorkingSrc(ssAudio, audioCandidates);
-    if (!chosenAudio) {
-      console.warn("Screensaver: audio not found. Tried:", audioCandidates);
-      // We can still play video-only if audio is missing
-      ssAudio.removeAttribute("src");
-      ssAudio.load();
-    }
-
-    // Start video (muted)
-    try {
-      await ssVideo.play();
-    } catch (e) {
-      console.warn("Screensaver video failed to play:", e);
-      return;
-    }
-
-    // Start audio (best effort)
-    if (chosenAudio) {
-      try {
-        ssAudio.currentTime = 0;
-        await ssAudio.play();
-      } catch (_) {
-        // autoplay policies may block audio; ignore
-      }
-    }
-
-    // Fade in
-    if (audioLeadMs > 0 && chosenAudio) {
-      await fadeAudio(ssAudio, 0, 0.85, Math.min(600, fadeInMs));
-      await new Promise((r) => setTimeout(r, audioLeadMs));
-    }
-
-    if (videoFadeInDelayMs > 0) {
-      await new Promise((r) => setTimeout(r, videoFadeInDelayMs));
-    }
-
-    if (chosenAudio && audioLeadMs <= 0) {
-      await Promise.all([
-        fadeOpacity(ssVideo, 0, 1, fadeInMs),
-        fadeAudio(ssAudio, 0, 0.85, fadeInMs),
-      ]);
-    } else {
-      await fadeOpacity(ssVideo, 0, 1, fadeInMs);
-    }
-
-    // Wait near end of video, then fade out
-    const safetyMs = 250;
-    const durationMs =
-      Number.isFinite(ssVideo.duration) && ssVideo.duration > 0
-        ? ssVideo.duration * 1000
-        : 8000;
-
-    const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
-    await new Promise((r) => setTimeout(r, waitMs));
-
-    await Promise.all([
-      fadeOpacity(ssVideo, 1, 0, fadeOutMs),
-      chosenAudio ? fadeAudio(ssAudio, ssAudio.volume, 0, fadeOutMs) : Promise.resolve(),
-    ]);
-
-    ssVideo.pause();
-    ssAudio.pause();
+  // Pick working sources
+  const chosenVideo = await pickWorkingSrc(ssVideo, videoCandidates);
+  if (!chosenVideo) {
+    console.warn("Screensaver: video not found. Tried:", videoCandidates);
+    return;
   }
 
-async function runScreensaverSequence() {
-  screensaverRunning = true;
-  openModal();
-
-  try {
-    // Step 1 — clean, confident intro
-    await playStep({
-      videoFile: "Screensaver_1.mp4",
-      audioFile: "Travel_through_space.mp3",
-      fadeInMs: 550,
-      fadeOutMs: 550,
-      audioLeadMs: 0,
-      videoFadeInDelayMs: 0,
-      seekToMs: 0,
-      endHoldMs: 150,
-    });
-    if (!screensaverRunning) return;
-
-    // Step 2 — “jump” moment: tighter sync, skip black lead-in if present
-    await playStep({
-      videoFile: "Screensaver_2.mp4",
-      audioFile: "Blender_Hyperspace_Jump.mp3",
-      fadeInMs: 650,
-      fadeOutMs: 650,
-      audioLeadMs: 120,         // tiny lead makes the jump feel intentional
-      videoFadeInDelayMs: 0,    // no need now that we wait for first frame
-      seekToMs: 80,             // adjust 60–120 if you still see a black start
-      endHoldMs: 120,
-    });
-    if (!screensaverRunning) return;
-
-    // Step 3 — dreamy, slow reveal
-    await playStep({
-      videoFile: "Screensaver_3.mp4",
-      audioFile: "Alien_Beach_Waves.mp3",
-      fadeInMs: 6000,
-      fadeOutMs: 750,
-      audioLeadMs: 700,
-      videoFadeInDelayMs: 0,
-      seekToMs: 0,
-      endHoldMs: 350,
-    });
-  } finally {
-    closeModal();
-    screensaverRunning = false;
-  }
-}
-
-function stopScreensaver() {
-  screensaverRunning = false;
-
-  if (ssVideo) {
-    ssVideo.pause();
-    ssVideo.removeAttribute("src");
-    ssVideo.load();
-    ssVideo.style.opacity = "0";
-  }
-
-  if (ssAudio) {
-    ssAudio.pause();
+  const chosenAudio = await pickWorkingSrc(ssAudio, audioCandidates);
+  if (!chosenAudio) {
+    console.warn("Screensaver: audio not found. Tried:", audioCandidates);
+    // We can still play video-only if audio is missing
     ssAudio.removeAttribute("src");
     ssAudio.load();
-    ssAudio.volume = 0;
   }
-}
 
-if (eggBtn) {
-  eggBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (!screensaverRunning) runScreensaverSequence();
-  });
-}
-})();
+  // Start video (muted)
+  try {
+    await ssVideo.play();
+  } catch (e) {
+    console.warn("Screensaver video failed to play:", e);
+    return;
+  }
+
+  // Start audio (best effort)
+  if (chosenAudio) {
+    try {
+      ssAudio.currentTime = 0;
+      await ssAudio.play();
+    } catch (_) {
+      // autoplay policies may block audio; ignore
+    }
+  }
+
+  // Fade in
+  if (audioLeadMs > 0 && chosenAudio) {
+    await fadeAudio(ssAudio, 0, 0.85, Math.min(600, fadeInMs));
+    await new Promise((r) => setTimeout(r, audioLeadMs));
+  }
+
+  if (videoFadeInDelayMs > 0) {
+    await new Promise((r) => setTimeout(r, videoFadeInDelayMs));
+  }
+
+  if (chosenAudio && audioLeadMs <= 0) {
+    await Promise.all([
+      fadeOpacity(ssVideo, 0, 1, fadeInMs),
+      fadeAudio(ssAudio, 0, 0.85, fadeInMs),
+    ]);
+  } else {
+    await fadeOpacity(ssVideo, 0, 1, fadeInMs);
+  }
+
+  // Wait near end of video, then fade out
+  const safetyMs = 250;
+  const durationMs =
+    Number.isFinite(ssVideo.duration) && ssVideo.duration > 0
+      ? ssVideo.duration * 1000
+      : 8000;
+
+  const waitMs = Math.max(0, durationMs - fadeOutMs - safetyMs);
+  await new Promise((r) => setTimeout(r, waitMs));
+
+  await Promise.all([
+    fadeOpacity(ssVideo, 1, 0, fadeOutMs),
+    chosenAudio ? fadeAudio(ssAudio, ssAudio.volume, 0, fadeOutMs) : Promise.resolve(),
+  ]);
+
+  ssVideo.pause();
+  ssAudio.pause();
+
+  async function runScreensaverSequence() {
+    screensaverRunning = true;
+    openModal();
+
+    try {
+      // Step 1 — clean, confident intro
+      await playStep({
+        videoFile: "Screensaver_1.mp4",
+        audioFile: "Travel_through_space.mp3",
+        fadeInMs: 550,
+        fadeOutMs: 550,
+        audioLeadMs: 0,
+        videoFadeInDelayMs: 0,
+        seekToMs: 0,
+        endHoldMs: 150,
+      });
+      if (!screensaverRunning) return;
+
+      // Step 2 — “jump” moment: tighter sync, skip black lead-in if present
+      await playStep({
+        videoFile: "Screensaver_2.mp4",
+        audioFile: "Blender_Hyperspace_Jump.mp3",
+        fadeInMs: 650,
+        fadeOutMs: 650,
+        audioLeadMs: 120,         // tiny lead makes the jump feel intentional
+        videoFadeInDelayMs: 0,    // no need now that we wait for first frame
+        seekToMs: 80,             // adjust 60–120 if you still see a black start
+        endHoldMs: 120,
+      });
+      if (!screensaverRunning) return;
+
+      // Step 3 — dreamy, slow reveal
+      await playStep({
+        videoFile: "Screensaver_3.mp4",
+        audioFile: "Alien_Beach_Waves.mp3",
+        fadeInMs: 6000,
+        fadeOutMs: 750,
+        audioLeadMs: 700,
+        videoFadeInDelayMs: 0,
+        seekToMs: 0,
+        endHoldMs: 350,
+      });
+    } finally {
+      closeModal();
+      screensaverRunning = false;
+    }
+  }
+
+  function stopScreensaver() {
+    screensaverRunning = false;
+
+    if (ssVideo) {
+      ssVideo.pause();
+      ssVideo.removeAttribute("src");
+      ssVideo.load();
+      ssVideo.style.opacity = "0";
+    }
+
+    if (ssAudio) {
+      ssAudio.pause();
+      ssAudio.removeAttribute("src");
+      ssAudio.load();
+      ssAudio.volume = 0;
+    }
+  }
+
+  if (eggBtn) {
+    eggBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!screensaverRunning) runScreensaverSequence();
+    });
+  }
+})()
